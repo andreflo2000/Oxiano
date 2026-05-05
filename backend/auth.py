@@ -3,6 +3,7 @@ JWT Authentication — register / login / token validation.
 Foloseste tabelul `users` din Supabase.
 """
 import os
+import secrets
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -172,3 +173,85 @@ def require_admin(user: dict = Depends(require_user)) -> dict:
     if user.get("role") not in ("owner", "admin"):
         raise HTTPException(403, "Acces rezervat administratorilor")
     return user
+
+
+# ─── forgot / reset password ────────────────────────────────
+
+
+def request_password_reset(email: str) -> None:
+    client = get_client()
+    if client is None:
+        return
+
+    rows = client.table("users").select("id").eq("email", email).execute()
+    if not rows.data:
+        return  # nu dezvaluim daca emailul exista
+
+    client.table("password_resets").delete().eq("email", email).execute()
+
+    token = str(secrets.randbelow(900000) + 100000)  # 6 cifre: 100000-999999
+    expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+
+    client.table("password_resets").insert({
+        "email":      email,
+        "token":      token,
+        "expires_at": expires.isoformat(),
+    }).execute()
+
+    _send_reset_email(email, token)
+
+
+def _send_reset_email(email: str, token: str) -> None:
+    import resend as _resend
+    api_key = os.getenv("RESEND_API_KEY", "")
+    if not api_key:
+        logger.warning("_send_reset_email: RESEND_API_KEY lipsa")
+        return
+    try:
+        _resend.api_key = api_key
+        _resend.Emails.send({
+            "from":    "Oxiano <noreply@oxiano.com>",
+            "to":      [email],
+            "subject": "Resetare parola — Oxiano",
+            "html":    f"""
+            <div style="background:#0f172a;padding:32px;font-family:monospace;color:#f1f5f9">
+              <h2 style="color:#3b82f6;margin:0 0 16px">Oxiano — Resetare parola</h2>
+              <p style="color:#94a3b8">Codul tau de resetare (valid 15 minute):</p>
+              <div style="background:#1e293b;border-radius:10px;padding:20px;text-align:center;
+                          font-size:36px;font-weight:700;letter-spacing:12px;color:#f1f5f9;
+                          border:1px solid #334155;margin:20px 0">
+                {token}
+              </div>
+              <p style="color:#64748b;font-size:12px">
+                Daca nu ai solicitat resetarea parolei, ignora acest email.
+              </p>
+            </div>""",
+        })
+    except Exception as e:
+        logger.error("_send_reset_email failed: %s", e)
+
+
+def reset_password(email: str, token: str, new_password: str) -> None:
+    client = get_client()
+    if client is None:
+        raise HTTPException(503, "DB indisponibil")
+
+    if len(new_password) < 6:
+        raise HTTPException(400, "Parola prea scurta (min 6 caractere)")
+    if len(new_password.encode("utf-8")) > 72:
+        raise HTTPException(400, "Parola prea lunga (max 72 caractere)")
+
+    rows = client.table("password_resets") \
+        .select("*").eq("email", email).eq("token", token).eq("used", False) \
+        .execute()
+
+    if not rows.data:
+        raise HTTPException(400, "Cod invalid sau deja folosit")
+
+    reset = rows.data[0]
+    expires = datetime.fromisoformat(reset["expires_at"].replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(400, "Codul a expirat. Solicita unul nou.")
+
+    client.table("users").update({"password_hash": _hash(new_password)}).eq("email", email).execute()
+    client.table("password_resets").update({"used": True}).eq("id", reset["id"]).execute()

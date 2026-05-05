@@ -22,7 +22,7 @@ from predictor import predict_match, load_model, get_known_teams
 from fixtures import get_today_fixtures, get_today_odds, _fetch_fixtures_for_range, fetch_competition_fixtures
 from db import log_predictions_bulk, get_client
 import cache as redis_cache
-from auth import register_user, login_user, get_current_user, require_user, require_admin
+from auth import register_user, login_user, get_current_user, require_user, require_admin, request_password_reset, reset_password
 from ingestion import compute_and_store_picks, load_picks_from_db, auto_mark_results
 
 logger = logging.getLogger(__name__)
@@ -251,6 +251,30 @@ def auth_change_password(request: Request, body: dict, user: dict = Depends(requ
         raise HTTPException(401, "Parola curenta incorecta")
     client.table("users").update({"password_hash": _hash(new_pw)}).eq("id", int(user["id"])).execute()
     return {"message": "Parola a fost schimbata cu succes"}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    token: str
+    new_password: str
+
+@app.post("/api/auth/forgot-password")
+@limiter.limit("3/minute")
+def auth_forgot_password(req: ForgotPasswordRequest, request: Request):
+    """Trimite cod de resetare parola pe email."""
+    request_password_reset(req.email)
+    return {"message": "Daca emailul exista in sistem, vei primi codul in cateva secunde."}
+
+
+@app.post("/api/auth/reset-password")
+@limiter.limit("5/minute")
+def auth_reset_password(req: ResetPasswordRequest, request: Request):
+    """Reseteaza parola folosind codul primit pe email."""
+    reset_password(req.email, req.token, req.new_password)
+    return {"message": "Parola a fost resetata. Te poti autentifica acum."}
 
 
 @app.patch("/api/auth/notifications-consent")
