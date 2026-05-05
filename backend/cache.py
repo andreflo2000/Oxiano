@@ -88,5 +88,17 @@ def delete(namespace: str, key: str):
     _redis(["DEL", _make_key(namespace, key)])
 
 
+def ttl(namespace: str, key: str) -> int:
+    """Returneaza TTL-ul ramas in secunde. -2 daca lipseste, -1 daca nu are expirare."""
+    if not _REDIS_URL:
+        entry = _mem_cache.get(f"{namespace}:{key}")
+        if not entry:
+            return -2
+        return max(0, int(entry["exp"] - time.time()))
+    rkey = _make_key(namespace, key)
+    result = _redis(["TTL", rkey])
+    return int(result) if result is not None else -2
+
+
 # Init la import
 _init()

@@ -7,6 +7,7 @@ import math
 import datetime
 import time
 import logging
+import threading
 import requests
 from fastapi import FastAPI, HTTPException, Query, Request, Depends, Header, BackgroundTasks
 from fastapi.responses import JSONResponse
@@ -26,6 +27,39 @@ from auth import register_user, login_user, get_current_user, require_user, requ
 from ingestion import compute_and_store_picks, load_picks_from_db, auto_mark_results
 
 logger = logging.getLogger(__name__)
+
+# ── Request coalescing — un singur compute per data ──────────────────────────
+_pick_events: dict[str, threading.Event] = {}
+_pick_events_lock = threading.Lock()
+
+
+def _coalesced_compute(target: str) -> dict | None:
+    """
+    Garanteaza ca compute_and_store_picks() ruleaza o singura data per `target`,
+    indiferent de cate threaduri cer simultan (thundering herd prevention).
+    """
+    with _pick_events_lock:
+        if target in _pick_events:
+            event = _pick_events[target]
+            is_leader = False
+        else:
+            event = threading.Event()
+            _pick_events[target] = event
+            is_leader = True
+
+    if not is_leader:
+        event.wait(timeout=90)
+        return load_picks_from_db(target)
+
+    try:
+        return compute_and_store_picks(target)
+    except Exception as e:
+        logger.warning("[coalesced] compute esuat pentru %s: %s", target, e)
+        return None
+    finally:
+        event.set()
+        with _pick_events_lock:
+            _pick_events.pop(target, None)
 
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
 
@@ -175,6 +209,15 @@ def api_health():
 def ping():
     """Keep-alive endpoint — pinged every 5 min by UptimeRobot."""
     return "pong"
+
+
+@app.get("/api/health/circuits")
+def health_circuits(admin_secret: str = Header(None, alias="X-Admin-Secret")):
+    """Status circuit breaker per API extern."""
+    if admin_secret != ADMIN_SECRET:
+        raise HTTPException(403, "Forbidden")
+    from circuit_breaker import cb
+    return {"circuits": cb.status() or "all closed"}
 
 
 # ─────────────────────────────────────────────
@@ -394,6 +437,7 @@ def _mask_vip_picks(picks: list, user: Optional[dict]) -> list:
 @limiter.limit("30/minute")
 def daily_picks(
     request: Request,
+    background_tasks: BackgroundTasks,
     date: Optional[str] = None,
     min_confidence: float = Query(0.50, ge=0.0, le=1.0),
     user: Optional[dict] = Depends(get_current_user),
@@ -413,13 +457,17 @@ def daily_picks(
 
     cache_key = f"{target}:{min_confidence}"
 
-    # 1. Redis cache (cel mai rapid) — ignora intrari goale
+    # 1. Redis cache (cel mai rapid) — stale-while-revalidate
     cached = redis_cache.get("daily", cache_key)
     if cached and cached.get("total_picks", 0) > 0:
+        remaining_ttl = redis_cache.ttl("daily", cache_key)
+        if 0 < remaining_ttl < 300 and target >= today_str:
+            # Cache aproape expirat — refresh in background, servim stale acum
+            background_tasks.add_task(compute_and_store_picks, target)
+            logger.info("[daily] stale-while-revalidate pentru %s (ttl=%ds)", target, remaining_ttl)
         return {**cached, "picks": _mask_vip_picks(cached["picks"], user)}
 
     # 2. Supabase daily_picks — look-ahead pana la 4 zile cand nu e data explicita
-    # Daca azi nu are meciuri (sfarsit de etapa, zi libera), servim urmatoarea zi cu meciuri
     search_dates = [target]
     if not date:
         for i in range(1, 5):
@@ -434,7 +482,7 @@ def daily_picks(
         all_picks = db_data["picks"]
         filtered  = [p for p in all_picks if p["confidence"] >= min_confidence * 100]
         if not filtered and search_date != target:
-            continue  # confidence filter elimina tot — incearca urmatoarea data
+            continue
         db_data["picks"]       = filtered
         db_data["total_picks"] = len(filtered)
         db_data["high_conf"]   = len([p for p in filtered if p["confidence"] >= 65])
@@ -443,21 +491,18 @@ def daily_picks(
         redis_cache.set("daily", cache_key, db_data, ttl=CACHE_TTL_DAILY)
         return {**db_data, "picks": _mask_vip_picks(db_data["picks"], user)}
 
-    # 3. Calcul live (daca scheduleru nu a rulat inca) — cu look-ahead intern in ingestion
+    # 3. Calcul live cu coalescing — un singur thread calculeaza, restul asteapta
     if target >= today_str:
-        try:
-            live_data = compute_and_store_picks(target)
-            if live_data and live_data.get("total_picks", 0) > 0:
-                all_picks = live_data.get("picks", [])
-                filtered  = [p for p in all_picks if p.get("confidence", 0) >= min_confidence * 100]
-                live_data["picks"]       = filtered
-                live_data["total_picks"] = len(filtered)
-                live_data["high_conf"]   = len([p for p in filtered if p.get("confidence", 0) >= 65])
-                live_data["med_conf"]    = len([p for p in filtered if 55 <= p.get("confidence", 0) < 65])
-                redis_cache.set("daily", cache_key, live_data, ttl=CACHE_TTL_DAILY)
-                return {**live_data, "picks": _mask_vip_picks(filtered, user)}
-        except Exception as e:
-            logger.warning("[daily] live compute pentru %s esuat: %s", target, e)
+        live_data = _coalesced_compute(target)
+        if live_data and live_data.get("total_picks", 0) > 0:
+            all_picks = live_data.get("picks", [])
+            filtered  = [p for p in all_picks if p.get("confidence", 0) >= min_confidence * 100]
+            live_data["picks"]       = filtered
+            live_data["total_picks"] = len(filtered)
+            live_data["high_conf"]   = len([p for p in filtered if p.get("confidence", 0) >= 65])
+            live_data["med_conf"]    = len([p for p in filtered if 55 <= p.get("confidence", 0) < 65])
+            redis_cache.set("daily", cache_key, live_data, ttl=CACHE_TTL_DAILY)
+            return {**live_data, "picks": _mask_vip_picks(filtered, user)}
 
     # 4. Nu exista date — picks in curs de calcul (scheduler 07:00/13:00)
     return {

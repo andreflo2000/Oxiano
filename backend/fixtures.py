@@ -7,9 +7,14 @@ returneaza o lista gata de predictat.
 import os
 import requests
 import datetime
+import logging
 from difflib import get_close_matches
 from typing import Optional
 from zoneinfo import ZoneInfo
+
+from circuit_breaker import cb
+
+logger = logging.getLogger(__name__)
 
 BUCHAREST_TZ = ZoneInfo("Europe/Bucharest")
 
@@ -506,18 +511,20 @@ def _fetch_fixtures_per_competition(date_str: str, known_teams: list) -> list:
     """
     Fetch fixtures din football-data.org per competitie (TIER_ONE compatible).
     Endpoint: /competitions/{code}/matches?dateFrom=...&dateTo=...
-    Delay 7s intre request-uri pentru a respecta limita de 10 req/min.
+    Delay 6s intre request-uri pentru a respecta limita de 10 req/min.
     """
     import time
     if not API_KEY:
         return []
+    if cb.is_open("football-data"):
+        logger.warning("[fixtures] football-data: circuit deschis, skip fetch")
+        return []
     headers = {"X-Auth-Token": API_KEY}
     fixtures = []
-    # Limitat la competitiile disponibile pe TIER_ONE
     TIER_ONE_CODES = ["PL", "BL1", "SA", "PD", "FL1", "DED", "PPL", "CL", "ELC", "BL2"]
     for i, code in enumerate(TIER_ONE_CODES):
         if i > 0:
-            time.sleep(6)  # 10 req/min = 1 req la 6s
+            time.sleep(6)
         try:
             resp = requests.get(
                 f"{BASE_URL}/competitions/{code}/matches",
@@ -528,7 +535,9 @@ def _fetch_fixtures_per_competition(date_str: str, known_teams: list) -> list:
             if resp.status_code == 403:
                 continue
             if resp.status_code == 429:
-                time.sleep(30)  # rate limit — asteapta si reincearca
+                cb.record_failure("football-data")
+                logger.warning("[fixtures] football-data: rate limit 429 la %s", code)
+                time.sleep(30)
                 resp = requests.get(
                     f"{BASE_URL}/competitions/{code}/matches",
                     headers=headers,
@@ -539,8 +548,12 @@ def _fetch_fixtures_per_competition(date_str: str, known_teams: list) -> list:
                 continue
             parsed = _parse_matches(resp.json(), known_teams, default_date=date_str)
             fixtures.extend(parsed)
-        except Exception:
+        except Exception as e:
+            cb.record_failure("football-data")
+            logger.warning("[fixtures] football-data: exceptie la %s: %s", code, e)
             continue
+    if fixtures:
+        cb.record_success("football-data")
     return fixtures
 
 
@@ -550,6 +563,9 @@ def _fetch_fixtures_api_football(date_str: str, known_teams: list) -> list:
     Returneaza lista normalizata de meciuri TIMED/SCHEDULED.
     """
     if not AF_KEY:
+        return []
+    if cb.is_open("api-football"):
+        logger.warning("[fixtures] api-football: circuit deschis, skip fetch")
         return []
     headers = {"x-apisports-key": AF_KEY}
     season = datetime.date.fromisoformat(date_str).year
@@ -566,6 +582,10 @@ def _fetch_fixtures_api_football(date_str: str, known_teams: list) -> list:
                 params={"date": date_str, "league": league_id, "season": season},
                 timeout=15,
             )
+            if resp.status_code == 429:
+                cb.record_failure("api-football")
+                logger.warning("[fixtures] api-football: rate limit 429 la liga %s", league_id)
+                continue
             if resp.status_code != 200:
                 continue
             data = resp.json()
@@ -604,8 +624,12 @@ def _fetch_fixtures_api_football(date_str: str, known_teams: list) -> list:
                     "competition_code": comp_code,
                     "status":           "TIMED",
                 })
-        except Exception:
+        except Exception as e:
+            cb.record_failure("api-football")
+            logger.warning("[fixtures] api-football: exceptie liga %s: %s", league_id, e)
             continue
+    if fixtures:
+        cb.record_success("api-football")
     return fixtures
 
 
@@ -895,6 +919,9 @@ def get_today_odds(known_teams: list = None, active_comp_codes: list = None) -> 
     """
     if not ODDS_API_KEY:
         return {}
+    if cb.is_open("the-odds-api"):
+        logger.warning("[fixtures] the-odds-api: circuit deschis, skip fetch")
+        return {}
 
     import datetime as _dt
     today = _dt.date.today().isoformat()
@@ -948,10 +975,11 @@ def get_today_odds(known_teams: list = None, active_comp_codes: list = None) -> 
                 break
             if resp.status_code == 429:
                 quota_exhausted = True
+                cb.record_failure("the-odds-api")
+                logger.warning("[fixtures] the-odds-api: quota epuizata (429)")
                 try:
                     import cache as redis_cache
                     redis_cache.set("odds_quota_exhausted", today, True, ttl=86400)
-                    # Backup: returneaza cotele de ieri daca exista
                     yesterday_cache = redis_cache.get("odds_daily", yesterday)
                     if yesterday_cache and isinstance(yesterday_cache, dict):
                         odds_map.update({tuple(k.split("|")): v for k, v in yesterday_cache.items()})
@@ -1013,6 +1041,7 @@ def get_today_odds(known_teams: list = None, active_comp_codes: list = None) -> 
 
     # Salveaza in Redis cu TTL 48h — backup pentru ziua urmatoare daca quota se epuizeaza
     if odds_map and not quota_exhausted:
+        cb.record_success("the-odds-api")
         try:
             import cache as redis_cache
             serializable = {f"{k[0]}|{k[1]}": v for k, v in odds_map.items()}
