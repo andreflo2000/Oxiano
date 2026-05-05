@@ -272,15 +272,18 @@ export default function TrackRecord() {
         {/* Acuratete live */}
         {hasLiveData && history && (
           <div className="grid grid-cols-2 gap-3 mb-6 fade-in">
-            <div className="card p-4 text-center">
-              <div className="text-3xl font-bold font-mono text-green-400">{history.summary.high_conf_accuracy}%</div>
-              <div className="text-[10px] font-mono text-gray-500 mt-1">{lang === 'en' ? 'Accuracy ≥65% conf (live)' : 'Acuratețe ≥65% conf (live)'}</div>
+            <div className="card p-4 text-center" style={{ border: '2px solid rgba(34,197,94,0.4)' }}>
+              <div className="text-[9px] font-bold text-green-400 uppercase tracking-widest mb-1">
+                ✓ {lang === 'en' ? 'Recommended' : 'Recomandat'}
+              </div>
+              <div className="text-4xl font-bold font-mono text-green-400">{history.summary.high_conf_accuracy}%</div>
+              <div className="text-[10px] font-mono text-gray-400 mt-1">{lang === 'en' ? 'Accuracy ≥65% conf (live)' : 'Acuratețe ≥65% conf (live)'}</div>
               {stats?.high_conf_total ? <div className="text-[9px] font-mono text-gray-600 mt-0.5">{lang === 'en' ? `from ${stats.high_conf_total} picks` : `din ${stats.high_conf_total} picks`}</div> : null}
             </div>
-            <div className="card p-4 text-center">
-              <div className="text-3xl font-bold font-mono text-amber-400">{history.summary.accuracy}%</div>
-              <div className="text-[10px] font-mono text-gray-500 mt-1">{lang === 'en' ? 'Overall accuracy (live)' : 'Acuratețe generală (live)'}</div>
-              <div className="text-[9px] font-mono text-gray-600 mt-0.5">{lang === 'en' ? `from ${history.summary.total} picks` : `din ${history.summary.total} picks`}</div>
+            <div className="card p-4 text-center" style={{ opacity: 0.65 }}>
+              <div className="text-2xl font-bold font-mono text-gray-500">{history.summary.accuracy}%</div>
+              <div className="text-[10px] font-mono text-gray-600 mt-1">{lang === 'en' ? 'Overall (incl. low confidence)' : 'General (inclusiv confidence redus)'}</div>
+              <div className="text-[9px] font-mono text-gray-700 mt-0.5">{lang === 'en' ? `from ${history.summary.total} picks` : `din ${history.summary.total} picks`}</div>
             </div>
           </div>
         )}
@@ -352,18 +355,31 @@ export default function TrackRecord() {
                 </div>
                 <div className="space-y-3">
                   {liveBreakdown!.map((b, i) => {
-                    const color = colors[i] ?? '#818cf8'
-                    const label = lang === 'en' ? (b.label_en ?? b.label) : b.label
+                    const isFirst = i === 0
+                    const isLast  = i === liveBreakdown!.length - 1
+                    const color   = isLast ? '#6b7280' : (colors[i] ?? '#818cf8')
+                    const rawLabel = lang === 'en' ? (b.label_en ?? b.label) : b.label
+                    const displayLabel = isLast
+                      ? (lang === 'en' ? 'All predictions (incl. confidence <55%)' : 'Toate predicțiile (inclusiv confidence <55%)')
+                      : rawLabel
                     return (
-                      <div key={b.label} className="card p-4">
+                      <div key={b.label} className="card p-4" style={{
+                        border: isFirst ? `2px solid ${colors[0]}` : isLast ? '1px solid rgba(255,255,255,0.04)' : undefined,
+                        opacity: isLast ? 0.6 : 1,
+                      }}>
+                        {isFirst && (
+                          <div className="text-[9px] font-bold text-green-400 uppercase tracking-widest mb-2">
+                            ✓ {lang === 'en' ? 'Recommended filter · Best signal quality' : 'Filtru recomandat · Semnal maxim'}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <div className="text-sm font-bold text-white">{label}</div>
+                            <div className={`font-bold text-white ${isFirst ? 'text-base' : 'text-sm'}`}>{displayLabel}</div>
                             <div className="text-[10px] text-gray-600 font-mono">
                               {b.wins}/{b.total} {lang === 'en' ? 'wins · live data' : 'victorii · date live'}
                             </div>
                           </div>
-                          <div className="text-3xl font-bold font-mono" style={{ color }}>
+                          <div className={`font-bold font-mono ${isFirst ? 'text-4xl' : isLast ? 'text-xl' : 'text-3xl'}`} style={{ color }}>
                             {b.total >= 5 ? `${b.accuracy}%` : '—'}
                           </div>
                         </div>
@@ -374,6 +390,12 @@ export default function TrackRecord() {
                       </div>
                     )
                   })}
+                </div>
+                <div className="mt-3 px-4 py-2 rounded-lg text-[10px] text-amber-600 font-mono text-center"
+                  style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                  {lang === 'en'
+                    ? '⚡ Low-confidence picks are published for full transparency, not recommended for betting. Recommended filter: confidence ≥65%.'
+                    : '⚡ Picks-urile cu confidence redus sunt publicate pentru transparență totală, nu recomandate. Filtru recomandat: confidence ≥65%.'}
                 </div>
                 <div className="text-center mt-2 text-[10px] text-gray-700 font-mono">
                   {lang === 'en' ? '* Random baseline = 33.3% · Updated daily at 23:30' : '* Baseline hazard = 33.3% · Actualizat zilnic la 23:30'}
@@ -392,23 +414,45 @@ export default function TrackRecord() {
                 {lang === 'en' ? '⏳ Live data accumulating — shown when ≥5 real results per tier' : '⏳ Date live în acumulare — afișate când ≥5 rezultate reale per nivel'}
               </div>
               <div className="space-y-3">
-                {BACKTEST_REF.map((b: any) => (
-                  <div key={b.label ?? b.label_ro} className="card p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <div className="text-sm font-bold text-white">{b.label ?? (lang === 'en' ? b.label_en : b.label_ro)}</div>
-                        <div className="text-[10px] text-gray-600 font-mono">{lang === 'en' ? b.sampleEn : b.sampleRo}</div>
+                {BACKTEST_REF.map((b: any, i: number) => {
+                  const isFirst = i === 0
+                  const isLast  = i === BACKTEST_REF.length - 1
+                  const displayColor = isLast ? '#6b7280' : b.color
+                  const displayLabel = isLast
+                    ? (lang === 'en' ? 'All predictions (incl. confidence <55%)' : 'Toate predicțiile (inclusiv confidence <55%)')
+                    : (b.label ?? (lang === 'en' ? b.label_en : b.label_ro))
+                  return (
+                    <div key={b.label ?? b.label_ro} className="card p-4" style={{
+                      border: isFirst ? `2px solid ${b.color}` : isLast ? '1px solid rgba(255,255,255,0.04)' : undefined,
+                      opacity: isLast ? 0.6 : 1,
+                    }}>
+                      {isFirst && (
+                        <div className="text-[9px] font-bold text-green-400 uppercase tracking-widest mb-2">
+                          ✓ {lang === 'en' ? 'Recommended filter · Best signal quality' : 'Filtru recomandat · Semnal maxim'}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <div className={`font-bold text-white ${isFirst ? 'text-base' : 'text-sm'}`}>{displayLabel}</div>
+                          <div className="text-[10px] text-gray-600 font-mono">{lang === 'en' ? b.sampleEn : b.sampleRo}</div>
+                        </div>
+                        <div className={`font-bold font-mono ${isFirst ? 'text-4xl' : isLast ? 'text-xl' : 'text-3xl'}`} style={{ color: displayColor }}>
+                          {b.accuracy}%
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold font-mono" style={{ color: b.color }}>
-                        {b.accuracy}%
+                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-1000"
+                          style={{ width: `${b.accuracy}%`, background: displayColor }} />
                       </div>
                     </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-1000"
-                        style={{ width: `${b.accuracy}%`, background: b.color }} />
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
+              </div>
+              <div className="mt-3 px-4 py-2 rounded-lg text-[10px] text-amber-600 font-mono text-center"
+                style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                {lang === 'en'
+                  ? '⚡ Low-confidence picks are published for full transparency, not recommended for betting. Recommended filter: confidence ≥65%.'
+                  : '⚡ Picks-urile cu confidence redus sunt publicate pentru transparență totală, nu recomandate. Filtru recomandat: confidence ≥65%.'}
               </div>
               <div className="text-center mt-2 text-[10px] text-gray-700 font-mono">
                 {lang === 'en' ? '* Random baseline = 33.3% · Model outperforms chance by +50%' : '* Random baseline = 33.3% · Modelul depășește cu +50% față de hazard'}
