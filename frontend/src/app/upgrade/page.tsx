@@ -6,7 +6,7 @@ import { useLang } from '@/lib/LangContext'
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://football-predictor-vlpp.onrender.com'
 
-const PLANS = (lang: 'ro' | 'en') => [
+const PLANS = (lang: import('@/lib/LangContext').Lang) => [
   {
     id: 'analyst' as const,
     name: 'Analyst',
@@ -14,7 +14,7 @@ const PLANS = (lang: 'ro' | 'en') => [
     priceUsd: 8,
     badge: null,
     featureCount: 5,
-    features: lang === 'en' ? [
+    features: lang !== 'ro' ? [
       'All HIGH confidence predictions',
       'Full markets (Over/Under · BTTS · Double Chance)',
       'Daily 3-fold accumulator',
@@ -27,7 +27,7 @@ const PLANS = (lang: 'ro' | 'en') => [
       'Notificări Telegram (2×/zi)',
       'Track record de bază (ultimele 7 zile)',
     ],
-    notIncluded: lang === 'en' ? [
+    notIncluded: lang !== 'ro' ? [
       'xG + Elo + Model breakdown',
       'Value Signal with edge vs. market',
       'Full track record + personal ROI',
@@ -46,9 +46,9 @@ const PLANS = (lang: 'ro' | 'en') => [
     name: 'Pro',
     price: 99,
     priceUsd: 20,
-    badge: lang === 'en' ? 'Best Value' : 'Cea mai bună alegere',
+    badge: lang !== 'ro' ? 'Best Value' : 'Cea mai bună alegere',
     featureCount: 10,
-    features: lang === 'en' ? [
+    features: lang !== 'ro' ? [
       'Everything in Analyst (5 features)',
       'xG + Elo + full model breakdown',
       'VALUE BET marked with edge vs. market',
@@ -137,10 +137,10 @@ export default function UpgradePage() {
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 24 }}>🌐</div>
         <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 12, color: '#f1f5f9' }}>
-          {lang === 'en' ? 'Manage your subscription on the web' : 'Gestionează abonamentul pe web'}
+          {lang !== 'ro' ? 'Manage your subscription on the web' : 'Gestionează abonamentul pe web'}
         </h1>
         <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.7, maxWidth: 320, marginBottom: 32 }}>
-          {lang === 'en'
+          {lang !== 'ro'
             ? 'Subscriptions for Oxiano are managed exclusively on oxiano.com. Tap below to open the website in your browser.'
             : 'Abonamentele Oxiano se gestionează exclusiv pe oxiano.com. Apasă mai jos pentru a deschide site-ul în browser.'}
         </p>
@@ -160,10 +160,10 @@ export default function UpgradePage() {
             marginBottom: 16,
           }}
         >
-          {lang === 'en' ? 'Open oxiano.com →' : 'Deschide oxiano.com →'}
+          {lang !== 'ro' ? 'Open oxiano.com →' : 'Deschide oxiano.com →'}
         </a>
         <p style={{ color: '#475569', fontSize: 11, marginTop: 16 }}>
-          {lang === 'en'
+          {lang !== 'ro'
             ? 'Analyst — $8/mo · Pro — $20/mo · Cancel anytime'
             : 'Analyst — 39 RON/lună · Pro — 99 RON/lună · Anulezi oricând'}
         </p>
@@ -187,13 +187,13 @@ export default function UpgradePage() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#f59e0b', letterSpacing: 2, marginBottom: 12, textTransform: 'uppercase' }}>
-            {lang === 'en' ? 'Upgrade account' : 'Upgrade cont'}
+            {lang !== 'ro' ? 'Upgrade account' : 'Upgrade cont'}
           </div>
           <h1 style={{ fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 800, marginBottom: 16, lineHeight: 1.15 }}>
-            {lang === 'en' ? <>Professional analytics.<br /><span style={{ color: '#60a5fa' }}>No noise.</span></> : <>Analitica profesionala.<br /><span style={{ color: '#60a5fa' }}>Fara zgomot.</span></>}
+            {lang !== 'ro' ? <>Professional analytics.<br /><span style={{ color: '#60a5fa' }}>No noise.</span></> : <>Analitica profesionala.<br /><span style={{ color: '#60a5fa' }}>Fara zgomot.</span></>}
           </h1>
           <p style={{ color: '#94a3b8', fontSize: 16, maxWidth: 520, margin: '0 auto' }}>
-            {lang === 'en'
+            {lang !== 'ro'
               ? <>Our XGBoost model achieves {liveStats ? `${liveStats.high_conf_accuracy}%` : '75%+'} accuracy on HIGH confidence predictions.{liveStats && liveStats.final_equity > 0 ? <> <span style={{ color: '#4ade80' }}>+{liveStats.final_equity}u profit = ~${(liveStats.final_equity * 4).toFixed(0)} at $2/pick.</span></> : null} Choose the plan that fits your analysis style.</>
               : <>Modelul nostru XGBoost înregistrează {liveStats ? `${liveStats.high_conf_accuracy}%` : '75%+'} acuratețe la predicțiile HIGH confidence.{liveStats && liveStats.final_equity > 0 ? <> <span style={{ color: '#4ade80' }}>+{liveStats.final_equity}u profit = ~{(liveStats.final_equity * 20).toFixed(0)} RON dacă joci 20 RON/pick.</span></> : null} Alege planul potrivit pentru stilul tău de analiză.</>}
           </p>
@@ -207,9 +207,9 @@ export default function UpgradePage() {
             background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.25)',
           }}>
             {[
-              { val: `${liveStats.high_conf_accuracy}%`, label: lang === 'en' ? 'accuracy ≥65% conf · live' : 'acuratețe ≥65% conf · live', color: '#4ade80' },
-              { val: `${liveStats.total}`, label: lang === 'en' ? 'verified picks' : 'picks verificate', color: '#60a5fa' },
-              { val: `${liveStats.final_equity >= 0 ? '+' : ''}${liveStats.final_equity}u`, label: lang === 'en' ? 'profit (1u stake)' : 'profit (1u miză)', color: liveStats.final_equity >= 0 ? '#4ade80' : '#f87171' },
+              { val: `${liveStats.high_conf_accuracy}%`, label: lang !== 'ro' ? 'accuracy ≥65% conf · live' : 'acuratețe ≥65% conf · live', color: '#4ade80' },
+              { val: `${liveStats.total}`, label: lang !== 'ro' ? 'verified picks' : 'picks verificate', color: '#60a5fa' },
+              { val: `${liveStats.final_equity >= 0 ? '+' : ''}${liveStats.final_equity}u`, label: lang !== 'ro' ? 'profit (1u stake)' : 'profit (1u miză)', color: liveStats.final_equity >= 0 ? '#4ade80' : '#f87171' },
             ].map(s => (
               <div key={s.label} style={{ textAlign: 'center', padding: '4px 20px' }}>
                 <div style={{ fontSize: 28, fontWeight: 800, fontFamily: 'monospace', color: s.color }}>{s.val}</div>
@@ -218,7 +218,7 @@ export default function UpgradePage() {
             ))}
             <div style={{ width: '100%', textAlign: 'center', marginTop: 4 }}>
               <Link href="/track-record" style={{ fontSize: 11, color: '#22c55e', textDecoration: 'none', fontFamily: 'monospace' }}>
-                {lang === 'en' ? '→ Full transparent track record' : '→ Track record complet, transparent'}
+                {lang !== 'ro' ? '→ Full transparent track record' : '→ Track record complet, transparent'}
               </Link>
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function UpgradePage() {
         {!alreadyPaid && countdown && (
           <div style={{ textAlign: 'center', padding: '12px 24px', marginBottom: 24, borderRadius: 12, background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)' }}>
             <span style={{ color: '#94a3b8', fontSize: 12, fontFamily: 'monospace' }}>
-              {lang === 'en' ? "Tomorrow's picks unlock at 07:00 · " : 'Picks de mâine se deblochează la 07:00 · '}
+              {lang !== 'ro' ? "Tomorrow's picks unlock at 07:00 · " : 'Picks de mâine se deblochează la 07:00 · '}
             </span>
             <span style={{ color: '#60a5fa', fontSize: 15, fontWeight: 700, fontFamily: 'monospace' }}>{countdown}</span>
           </div>
@@ -235,7 +235,7 @@ export default function UpgradePage() {
 
         {alreadyPaid && (
           <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid #22c55e', borderRadius: 12, padding: '16px 24px', marginBottom: 32, textAlign: 'center', color: '#4ade80' }}>
-            {lang === 'en' ? `You already have an active subscription (${user?.tier}). Thank you for your trust!` : `Ai deja un abonament activ (${user?.tier}). Multumim pentru incredere!`}
+            {lang !== 'ro' ? `You already have an active subscription (${user?.tier}). Thank you for your trust!` : `Ai deja un abonament activ (${user?.tier}). Multumim pentru incredere!`}
           </div>
         )}
 
@@ -291,11 +291,11 @@ export default function UpgradePage() {
                     color: plan.badge ? '#f59e0b' : '#60a5fa',
                     border: `1px solid ${plan.badge ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'}`,
                   }}>
-                    {(plan as any).featureCount} {lang === 'en' ? 'features' : 'funcții'}
+                    {(plan as any).featureCount} {lang !== 'ro' ? 'features' : 'funcții'}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  {lang === 'en' ? (
+                  {lang !== 'ro' ? (
                     <>
                       <span style={{ fontSize: 42, fontWeight: 800, color: '#f1f5f9' }}>${plan.priceUsd}</span>
                       <span style={{ fontSize: 16, color: '#64748b' }}>/month</span>
@@ -309,7 +309,7 @@ export default function UpgradePage() {
                 </div>
                 {plan.badge && (
                   <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>
-                    {lang === 'en' ? '2.5× more features · same low price ratio' : 'De 2× mai multe funcții · cel mai bun raport calitate/preț'}
+                    {lang !== 'ro' ? '2.5× more features · same low price ratio' : 'De 2× mai multe funcții · cel mai bun raport calitate/preț'}
                   </div>
                 )}
               </div>
@@ -331,7 +331,7 @@ export default function UpgradePage() {
                   <>
                     <li style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '14px 0 10px' }} />
                     <li style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                      {lang === 'en' ? 'Not included' : 'Nu include'}
+                      {lang !== 'ro' ? 'Not included' : 'Nu include'}
                     </li>
                   </>
                 )}
@@ -362,7 +362,7 @@ export default function UpgradePage() {
                   color: '#fff',
                 }}
               >
-                {loading === plan.id ? (lang === 'en' ? 'Redirecting...' : 'Se redirectioneaza...') : alreadyPaid ? (lang === 'en' ? 'Active subscription' : 'Abonament activ') : (lang === 'en' ? `Choose ${plan.name}` : `Alege ${plan.name}`)}
+                {loading === plan.id ? (lang !== 'ro' ? 'Redirecting...' : 'Se redirectioneaza...') : alreadyPaid ? (lang !== 'ro' ? 'Active subscription' : 'Abonament activ') : (lang !== 'ro' ? `Choose ${plan.name}` : `Alege ${plan.name}`)}
               </button>
             </div>
           ))}
@@ -377,10 +377,10 @@ export default function UpgradePage() {
           marginBottom: 48,
         }}>
           <div style={{ fontWeight: 600, color: '#64748b', marginBottom: 16, textTransform: 'uppercase', letterSpacing: 1, fontSize: 12 }}>
-            {lang === 'en' ? 'Free (existing account)' : 'Gratuit (cont existent)'}
+            {lang !== 'ro' ? 'Free (existing account)' : 'Gratuit (cont existent)'}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-            {(lang === 'en' ? [
+            {(lang !== 'ro' ? [
               'MEDIUM + LOW confidence predictions',
               'Public accumulators',
               'Public track record',
@@ -400,7 +400,7 @@ export default function UpgradePage() {
 
         {/* Trust badges */}
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 32, marginBottom: 48, color: '#64748b', fontSize: 13 }}>
-          {(lang === 'en' ? [
+          {(lang !== 'ro' ? [
             { icon: '🔒', text: 'Secure Gumroad payment' },
             { icon: '↩️', text: 'Cancel anytime' },
             { icon: '📊', text: liveStats ? `${liveStats.high_conf_accuracy}% verified accuracy` : '75%+ verified accuracy' },
@@ -420,7 +420,7 @@ export default function UpgradePage() {
 
         {/* Disclaimer */}
         <div style={{ textAlign: 'center', color: '#475569', fontSize: 12, lineHeight: 1.6 }}>
-          {lang === 'en' ? <>By subscribing you agree to our{' '}
+          {lang !== 'ro' ? <>By subscribing you agree to our{' '}
           <Link href="/terms" style={{ color: '#60a5fa', textDecoration: 'none' }}>Terms & Conditions</Link>
           {' '}and{' '}
           <Link href="/privacy" style={{ color: '#60a5fa', textDecoration: 'none' }}>Privacy Policy</Link>.

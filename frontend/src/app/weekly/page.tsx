@@ -574,8 +574,8 @@ function AddModal({ onAdd, onClose }: { onAdd: (m: TrackedMatch) => void; onClos
 }
 
 export default function Weekly() {
-  const [lang, setLang] = useState<'ro'|'en'>('ro')
-  const tr = t[lang]
+  const [lang, setLang] = useState<import('@/lib/LangContext').Lang>('ro')
+  const tr = t[(lang === 'ro' ? 'ro' : 'en') as 'ro' | 'en']
   const [user, setUser] = useState<any>(null)
   const [matches, setMatches] = useState<TrackedMatch[]>([])
   const [loading, setLoading] = useState(true)

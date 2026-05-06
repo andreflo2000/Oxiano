@@ -292,7 +292,7 @@ Estimated response time: 2–5 business days.`,
 
 export default function TermsPage() {
   const { lang, setLang } = useLang()
-  const t = CONTENT[lang]
+  const t = CONTENT[(lang === 'ro' ? 'ro' : 'en') as 'ro' | 'en']
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #051F14 0%, #0A1128 100%)', color: '#e5e7eb', fontFamily: 'system-ui, sans-serif' }}>

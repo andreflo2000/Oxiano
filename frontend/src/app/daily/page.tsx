@@ -83,10 +83,10 @@ function computeKelly(confidence: number, edge: number | undefined, hasOdds: boo
   return Math.max(0, Math.min(0.10, kelly))  // cap 0-10%
 }
 
-function confColor(level: string, lang: 'ro' | 'en' = 'ro') {
-  if (level === 'high')   return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.35)',  text: '#22c55e', label: lang === 'en' ? 'HIGH' : 'RIDICATĂ' }
-  if (level === 'medium') return { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)', text: '#f59e0b', label: lang === 'en' ? 'MEDIUM' : 'MEDIE' }
-  return                         { bg: 'rgba(99,102,241,0.10)', border: 'rgba(99,102,241,0.30)', text: '#818cf8', label: lang === 'en' ? 'LOW' : 'SCĂZUTĂ' }
+function confColor(level: string, lang: import('@/lib/LangContext').Lang = 'ro') {
+  if (level === 'high')   return { bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.35)',  text: '#22c55e', label: lang !== 'ro' ? 'HIGH' : 'RIDICATĂ' }
+  if (level === 'medium') return { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)', text: '#f59e0b', label: lang !== 'ro' ? 'MEDIUM' : 'MEDIE' }
+  return                         { bg: 'rgba(99,102,241,0.10)', border: 'rgba(99,102,241,0.30)', text: '#818cf8', label: lang !== 'ro' ? 'LOW' : 'SCĂZUTĂ' }
 }
 
 // Returneaza cota reala daca exista, altfel estimeaza din probabilitate
@@ -97,10 +97,10 @@ function getOdd(p: Pick, prediction: 'H' | 'D' | 'A', prob: number): { odd: stri
   return { odd: Math.max(1.20, 100 / (Math.max(prob, 1) * 1.08)).toFixed(2), isReal: false }
 }
 
-function predLabel(p: Pick, lang: 'ro' | 'en' = 'ro') {
+function predLabel(p: Pick, lang: import('@/lib/LangContext').Lang = 'ro') {
   if (p.prediction === 'H') return { emoji: '◀', short: '1',  full: p.home,  prob: p.home_win }
   if (p.prediction === 'A') return { emoji: '▶', short: '2',  full: p.away,  prob: p.away_win }
-  return                           { emoji: '▬', short: 'X',  full: lang === 'en' ? 'Draw' : 'Egal',  prob: p.draw }
+  return                           { emoji: '▬', short: 'X',  full: lang !== 'ro' ? 'Draw' : 'Egal',  prob: p.draw }
 }
 
 // ── Format share Telegram ────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ function PersonalTracker({ picks }: { picks: Pick[] }) {
     <div className="mt-6">
       <button onClick={() => setOpen(o => !o)} className="w-full py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2"
         style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', color: '#818cf8' }}>
-        📓 {lang === 'en' ? 'Personal Tracker' : 'Tracker Personal'} {bets.length > 0 && `· ${bets.length} ${lang === 'en' ? 'bets' : 'pariuri'}`} {open ? '▲' : '▼'}
+        📓 {lang !== 'ro' ? 'Personal Tracker' : 'Tracker Personal'} {bets.length > 0 && `· ${bets.length} ${lang !== 'ro' ? 'bets' : 'pariuri'}`} {open ? '▲' : '▼'}
       </button>
       {open && (
         <div className="mt-3 card p-4 fade-in">
@@ -261,8 +261,8 @@ function PersonalTracker({ picks }: { picks: Pick[] }) {
           {total > 0 && (
             <div className="grid grid-cols-4 gap-2 mb-4">
               {[
-                { label: lang === 'en' ? 'Won' : 'Câștigate', val: wins, color: '#22c55e' },
-                { label: lang === 'en' ? 'Lost' : 'Pierdute', val: losses, color: '#ef4444' },
+                { label: lang !== 'ro' ? 'Won' : 'Câștigate', val: wins, color: '#22c55e' },
+                { label: lang !== 'ro' ? 'Lost' : 'Pierdute', val: losses, color: '#ef4444' },
                 { label: 'ROI', val: `${roiPct > 0 ? '+' : ''}${roiPct}%`, color: roiPct >= 0 ? '#22c55e' : '#ef4444' },
                 { label: `P/L (${stake} RON)`, val: `${roi > 0 ? '+' : ''}${roi.toFixed(0)}`, color: roi >= 0 ? '#22c55e' : '#ef4444' },
               ].map(s => (
@@ -276,7 +276,7 @@ function PersonalTracker({ picks }: { picks: Pick[] }) {
 
           {/* Stake input */}
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-[10px] text-gray-500 font-mono shrink-0">{lang === 'en' ? 'Stake per bet:' : 'Miză per pariu:'}</span>
+            <span className="text-[10px] text-gray-500 font-mono shrink-0">{lang !== 'ro' ? 'Stake per bet:' : 'Miză per pariu:'}</span>
             <input type="number" value={stake} onChange={e => setStake(e.target.value)} min="1"
               className="w-20 bg-gray-800/60 border border-gray-700 rounded-lg px-2 py-1 text-white text-sm font-mono focus:outline-none focus:border-blue-500" />
             <span className="text-[10px] text-gray-600 font-mono">RON</span>
@@ -284,7 +284,7 @@ function PersonalTracker({ picks }: { picks: Pick[] }) {
 
           {/* Add from today's picks */}
           <div className="mb-4">
-            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-mono">{lang === 'en' ? "Add from today's picks:" : 'Adaugă din pick-urile de azi:'}</div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-mono">{lang !== 'ro' ? "Add from today's picks:" : 'Adaugă din pick-urile de azi:'}</div>
             <div className="space-y-1">
               {picks.slice(0, 5).map((p, i) => {
                 const pred = predLabel(p)
@@ -298,7 +298,7 @@ function PersonalTracker({ picks }: { picks: Pick[] }) {
                       opacity: already ? 0.5 : 1,
                     }}>
                     <span className="text-[11px] text-white font-mono truncate">{p.flag} {p.home} vs {p.away} · <span className="text-indigo-400">{pred.short}</span></span>
-                    <span className="text-[10px] text-gray-500 shrink-0 ml-2">{already ? (lang === 'en' ? '✓ added' : '✓ adăugat') : (lang === 'en' ? '+ add' : '+ adaugă')}</span>
+                    <span className="text-[10px] text-gray-500 shrink-0 ml-2">{already ? (lang !== 'ro' ? '✓ added' : '✓ adăugat') : (lang !== 'ro' ? '+ add' : '+ adaugă')}</span>
                   </button>
                 )
               })}
@@ -308,7 +308,7 @@ function PersonalTracker({ picks }: { picks: Pick[] }) {
           {/* Bet history */}
           {bets.length > 0 && (
             <div className="space-y-2">
-              <div className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">{lang === 'en' ? 'Your history:' : 'Istoricul tău:'}</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">{lang !== 'ro' ? 'Your history:' : 'Istoricul tău:'}</div>
               {[...bets].reverse().slice(0, 10).map(b => (
                 <div key={b.id} className="flex items-center gap-2 bg-gray-800/30 rounded-xl px-3 py-2">
                   <div className="flex-1 min-w-0">
@@ -353,18 +353,18 @@ function StreakBadges({ pick }: { pick: Pick }) {
   const aVenue = pick.away_venue_form ?? pick.away_form
 
   if (hVenue >= 65)
-    badges.push({ text: `🔥 ${pick.home.split(' ')[0]} ${lang === 'en' ? 'strong at home' : 'formă acasă'}`, color: '#f97316' })
+    badges.push({ text: `🔥 ${pick.home.split(' ')[0]} ${lang !== 'ro' ? 'strong at home' : 'formă acasă'}`, color: '#f97316' })
   if (aVenue >= 65)
-    badges.push({ text: `🔥 ${pick.away.split(' ')[0]} ${lang === 'en' ? 'strong away' : 'formă deplasare'}`, color: '#f97316' })
+    badges.push({ text: `🔥 ${pick.away.split(' ')[0]} ${lang !== 'ro' ? 'strong away' : 'formă deplasare'}`, color: '#f97316' })
   if (hVenue <= 30)
-    badges.push({ text: `📉 ${pick.home.split(' ')[0]} ${lang === 'en' ? 'weak at home' : 'slab acasă'}`, color: '#ef4444' })
+    badges.push({ text: `📉 ${pick.home.split(' ')[0]} ${lang !== 'ro' ? 'weak at home' : 'slab acasă'}`, color: '#ef4444' })
   if (aVenue <= 30)
-    badges.push({ text: `📉 ${pick.away.split(' ')[0]} ${lang === 'en' ? 'weak away' : 'slab în deplasare'}`, color: '#ef4444' })
+    badges.push({ text: `📉 ${pick.away.split(' ')[0]} ${lang !== 'ro' ? 'weak away' : 'slab în deplasare'}`, color: '#ef4444' })
 
   const eloDiff = Math.abs(pick.home_elo - pick.away_elo)
   if (eloDiff >= 150) {
     const fav = pick.home_elo > pick.away_elo ? pick.home : pick.away
-    badges.push({ text: `⚡ ${fav.split(' ')[0]} ${lang === 'en' ? `Elo favourite (+${eloDiff})` : `favorit Elo (+${eloDiff})`}`, color: '#a78bfa' })
+    badges.push({ text: `⚡ ${fav.split(' ')[0]} ${lang !== 'ro' ? `Elo favourite (+${eloDiff})` : `favorit Elo (+${eloDiff})`}`, color: '#a78bfa' })
   }
 
   // Model contrazice favoritul Elo — evidentiaza subtil
@@ -374,10 +374,10 @@ function StreakBadges({ pick }: { pick: Pick }) {
     (pick.prediction === 'A' && eloFavIsHome)
   )
   if (modelUpset)
-    badges.push({ text: lang === 'en' ? '🔄 Model vs Elo favourite' : '🔄 Model contra favorit Elo', color: '#94a3b8' })
+    badges.push({ text: lang !== 'ro' ? '🔄 Model vs Elo favourite' : '🔄 Model contra favorit Elo', color: '#94a3b8' })
 
   if (eloDiff < 30 && Math.abs(hVenue - aVenue) < 10)
-    badges.push({ text: lang === 'en' ? '⚖️ Even match' : '⚖️ Meci echilibrat', color: '#6b7280' })
+    badges.push({ text: lang !== 'ro' ? '⚖️ Even match' : '⚖️ Meci echilibrat', color: '#6b7280' })
 
   if (badges.length === 0) return null
   return (
@@ -393,7 +393,7 @@ function StreakBadges({ pick }: { pick: Pick }) {
 }
 
 // ── Goal Suggestions ─────────────────────────────────────────────────────────
-function GoalSuggestions({ pick, lang }: { pick: Pick; lang: 'ro' | 'en' }) {
+function GoalSuggestions({ pick, lang }: { pick: Pick; lang: import('@/lib/LangContext').Lang }) {
   const over25 = pick.over25_rate ?? 50
   const btts   = pick.btts_rate   ?? 50
   const chips: { label: string; prob: number; color: string }[] = []
@@ -404,15 +404,15 @@ function GoalSuggestions({ pick, lang }: { pick: Pick; lang: 'ro' | 'en' }) {
     chips.push({ label: 'U 2.5', prob: 100 - over25, color: '#60a5fa' })
 
   if (btts >= 60)
-    chips.push({ label: lang === 'en' ? 'BTTS Yes' : 'Ambele marchează', prob: btts, color: '#a78bfa' })
+    chips.push({ label: lang !== 'ro' ? 'BTTS Yes' : 'Ambele marchează', prob: btts, color: '#a78bfa' })
   else if (btts <= 35)
-    chips.push({ label: lang === 'en' ? 'BTTS No' : 'Clean sheet posibil', prob: 100 - btts, color: '#f97316' })
+    chips.push({ label: lang !== 'ro' ? 'BTTS No' : 'Clean sheet posibil', prob: 100 - btts, color: '#f97316' })
 
   if (chips.length === 0) return null
   return (
     <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
       <span style={{ fontSize: 9, color: '#475569', fontFamily: 'monospace', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-        {lang === 'en' ? 'Goals' : 'Goluri'}
+        {lang !== 'ro' ? 'Goals' : 'Goluri'}
       </span>
       {chips.map(ch => (
         <span key={ch.label} style={{
@@ -499,10 +499,10 @@ function TelegramSendButton({ picks }: { picks: Pick[] }) {
   }
 
   const label = {
-    idle:    lang === 'en' ? '✈️ Send on Telegram' : '✈️ Trimite pe Telegram',
-    sending: lang === 'en' ? '⏳ Sending...' : '⏳ Se trimite...',
-    sent:    lang === 'en' ? '✅ Sent!' : '✅ Trimis!',
-    error:   lang === 'en' ? '❌ Error — no combo valid' : '❌ Eroare — no combo valid',
+    idle:    lang !== 'ro' ? '✈️ Send on Telegram' : '✈️ Trimite pe Telegram',
+    sending: lang !== 'ro' ? '⏳ Sending...' : '⏳ Se trimite...',
+    sent:    lang !== 'ro' ? '✅ Sent!' : '✅ Trimis!',
+    error:   lang !== 'ro' ? '❌ Error — no combo valid' : '❌ Eroare — no combo valid',
   }[status]
 
   return (
@@ -560,7 +560,7 @@ function PickCard({ pick, rank, userTier }: { pick: Pick; rank: number; userTier
         </div>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[11px] font-mono font-bold" style={{ color: '#eab308' }}>
-            {lang === 'en' ? 'Confidence' : 'Certitudine'}: {pick.confidence}%
+            {lang !== 'ro' ? 'Confidence' : 'Certitudine'}: {pick.confidence}%
           </span>
           {pick.value_bet && <span className="text-[10px] font-mono" style={{ color: '#f59e0b' }}>💎 EDGE+</span>}
         </div>
@@ -583,7 +583,7 @@ function PickCard({ pick, rank, userTier }: { pick: Pick; rank: number; userTier
         {/* CTA */}
         <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid rgba(234,179,8,0.15)' }}>
           <span style={{ fontSize: 11, color: '#6b7280' }}>
-            {lang === 'en' ? 'Unlock prediction & probabilities' : 'Deblochează predicția și probabilitățile'}
+            {lang !== 'ro' ? 'Unlock prediction & probabilities' : 'Deblochează predicția și probabilitățile'}
           </span>
           <a href="/upgrade" style={{
             padding: '6px 14px', background: 'linear-gradient(90deg, #f59e0b, #ef4444)',
@@ -622,14 +622,14 @@ function PickCard({ pick, rank, userTier }: { pick: Pick; rank: number; userTier
         <div className="flex-1 min-w-0">
           <div className="text-base font-bold text-white leading-tight truncate">{pick.home}</div>
           <div className="text-[10px] font-mono text-gray-500 mt-0.5">
-            Elo {pick.home_elo} · {lang === 'en' ? 'Home' : 'Acasă'} {pick.home_venue_form ?? pick.home_form}%
+            Elo {pick.home_elo} · {lang !== 'ro' ? 'Home' : 'Acasă'} {pick.home_venue_form ?? pick.home_form}%
           </div>
         </div>
         <div className="text-gray-600 font-bold text-sm mx-3 shrink-0">VS</div>
         <div className="flex-1 min-w-0 text-right">
           <div className="text-base font-bold text-white leading-tight truncate">{pick.away}</div>
           <div className="text-[10px] font-mono text-gray-500 mt-0.5">
-            Elo {pick.away_elo} · {lang === 'en' ? 'Away' : 'Depl.'} {pick.away_venue_form ?? pick.away_form}%
+            Elo {pick.away_elo} · {lang !== 'ro' ? 'Away' : 'Depl.'} {pick.away_venue_form ?? pick.away_form}%
           </div>
         </div>
       </div>
@@ -663,7 +663,7 @@ function PickCard({ pick, rank, userTier }: { pick: Pick; rank: number; userTier
             <div className="text-xs font-bold" style={{ color: c.text }}>
               {pred.short} — {pred.full}
             </div>
-            <div className="text-[10px] font-mono text-gray-500">{lang === 'en' ? 'AI Prediction' : 'Predicție AI'}</div>
+            <div className="text-[10px] font-mono text-gray-500">{lang !== 'ro' ? 'AI Prediction' : 'Predicție AI'}</div>
           </div>
         </div>
         <div className="text-right">
@@ -694,7 +694,7 @@ function PickCard({ pick, rank, userTier }: { pick: Pick; rank: number; userTier
               color: '#10b981', fontSize: 10, fontWeight: 700, padding: '3px 8px',
               borderRadius: 6, fontFamily: 'monospace',
             }}>
-              📊 {lang === 'en' ? 'MARKET UNDERVALUED' : 'PIAȚA SUBEVALUATĂ'}
+              📊 {lang !== 'ro' ? 'MARKET UNDERVALUED' : 'PIAȚA SUBEVALUATĂ'}
             </span>
           ) : null}
           {pick.upset_risk && (
@@ -703,7 +703,7 @@ function PickCard({ pick, rank, userTier }: { pick: Pick; rank: number; userTier
               color: '#f87171', fontSize: 10, fontWeight: 700, padding: '3px 8px',
               borderRadius: 6, fontFamily: 'monospace',
             }}>
-              ⚠️ {lang === 'en' ? 'UPSET RISK' : 'RISC SURPRIZĂ'}
+              ⚠️ {lang !== 'ro' ? 'UPSET RISK' : 'RISC SURPRIZĂ'}
             </span>
           )}
         </div>
@@ -719,7 +719,7 @@ function PickCard({ pick, rank, userTier }: { pick: Pick; rank: number; userTier
             style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)' }}>
             <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest shrink-0">Kelly</span>
             <span className="text-[11px] font-bold font-mono text-indigo-400">{pct}% bankroll</span>
-            <span className="text-[9px] text-gray-600 font-mono">· {lang === 'en' ? 'suggested stake' : 'miza sugerată'}</span>
+            <span className="text-[9px] text-gray-600 font-mono">· {lang !== 'ro' ? 'suggested stake' : 'miza sugerată'}</span>
           </div>
         )
       })()}
@@ -796,7 +796,7 @@ function FreePicks({ picks, userTier }: { picks: Pick[], userTier?: string }) {
     if (btts >= 50 && bttsOdd >= 1.30) {
       goalCandidates.push({
         pick: p,
-        label: lang === 'en' ? 'BTTS — Yes' : 'Ambele marchează',
+        label: lang !== 'ro' ? 'BTTS — Yes' : 'Ambele marchează',
         prob: btts,
       })
       seenGoals.add(key)
@@ -825,15 +825,15 @@ function FreePicks({ picks, userTier }: { picks: Pick[], userTier?: string }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-xs font-bold text-amber-400 uppercase tracking-widest">🎁 {lang === 'en' ? 'Free Analysis' : 'Analize Gratuite'}</div>
+            <div className="text-xs font-bold text-amber-400 uppercase tracking-widest">🎁 {lang !== 'ro' ? 'Free Analysis' : 'Analize Gratuite'}</div>
             <div className="text-[10px] text-gray-500 font-mono mt-0.5">
               {mode === 'result'
-                ? (lang === 'en' ? 'Top 3 · Match result' : 'Top 3 · Rezultat meci')
-                : (lang === 'en' ? 'Top 3 · Goals market' : 'Top 3 · Piața golurilor')}
+                ? (lang !== 'ro' ? 'Top 3 · Match result' : 'Top 3 · Rezultat meci')
+                : (lang !== 'ro' ? 'Top 3 · Goals market' : 'Top 3 · Piața golurilor')}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">{lang === 'en' ? 'Est. accumulator' : 'Acumulator est.'}</div>
+            <div className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">{lang !== 'ro' ? 'Est. accumulator' : 'Acumulator est.'}</div>
             <div className="text-2xl font-bold font-mono text-amber-400">x{comboOdd.toFixed(2)}</div>
           </div>
         </div>
@@ -848,7 +848,7 @@ function FreePicks({ picks, userTier }: { picks: Pick[], userTier?: string }) {
                 border: `1px solid ${mode === m ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.08)'}`,
                 color: mode === m ? '#fbbf24' : '#6b7280',
               }}>
-              {m === 'result' ? (lang === 'en' ? '⚽ 1X2' : '⚽ Rezultate') : (lang === 'en' ? '🎯 Goals' : '🎯 Goluri')}
+              {m === 'result' ? (lang !== 'ro' ? '⚽ 1X2' : '⚽ Rezultate') : (lang !== 'ro' ? '🎯 Goals' : '🎯 Goluri')}
             </button>
           ))}
         </div>
@@ -886,7 +886,7 @@ function FreePicks({ picks, userTier }: { picks: Pick[], userTier?: string }) {
           </div>
         ) : goalCandidates.length === 0 ? (
           <div className="text-center py-6 text-gray-600 text-xs font-mono">
-            {lang === 'en' ? 'No clear goal signals today' : 'Niciun semnal clar pe goluri azi'}
+            {lang !== 'ro' ? 'No clear goal signals today' : 'Niciun semnal clar pe goluri azi'}
           </div>
         ) : (
           <div className="space-y-2">
@@ -920,7 +920,7 @@ function FreePicks({ picks, userTier }: { picks: Pick[], userTier?: string }) {
 
         {/* Footer */}
         <div className="mt-3 pt-3 border-t border-amber-900/30 flex items-center justify-between gap-2">
-          <div className="text-[10px] text-gray-600 font-mono">{lang === 'en' ? '* Estimated odds with 8% margin' : '* Cote estimate cu marjă 8%'}</div>
+          <div className="text-[10px] text-gray-600 font-mono">{lang !== 'ro' ? '* Estimated odds with 8% margin' : '* Cote estimate cu marjă 8%'}</div>
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -936,7 +936,7 @@ function FreePicks({ picks, userTier }: { picks: Pick[], userTier?: string }) {
               onClick={() => {
                 const dateStr = formatDate(new Date().toISOString().split('T')[0])
                 const text = buildAccumulatorCard(top3Result, dateStr)
-                navigator.clipboard?.writeText(text).then(() => alert(lang === 'en' ? 'Copied! Paste in Telegram.' : 'Copiat! Lipește în Telegram.'))
+                navigator.clipboard?.writeText(text).then(() => alert(lang !== 'ro' ? 'Copied! Paste in Telegram.' : 'Copiat! Lipește în Telegram.'))
               }}
               className="text-[10px] font-bold px-3 py-1.5 rounded-lg"
               style={{ background: 'rgba(38,120,188,0.15)', color: '#2678bc', border: '1px solid rgba(38,120,188,0.3)' }}>
@@ -986,7 +986,7 @@ function BankerCard({ picks }: { picks: Pick[] }) {
   const dirLabel = (dir: 'H' | 'D' | 'A') => {
     if (dir === 'H') return { short: '1', full: banker.home }
     if (dir === 'A') return { short: '2', full: banker.away }
-    return { short: 'X', full: lang === 'en' ? 'Draw' : 'Egal' }
+    return { short: 'X', full: lang !== 'ro' ? 'Draw' : 'Egal' }
   }
   const pred = dirLabel(bankerDir)
   const odd = bankerOdd
@@ -1000,7 +1000,7 @@ function BankerCard({ picks }: { picks: Pick[] }) {
           <span className="text-xl">🏦</span>
           <div>
             <div className="text-xs font-bold text-purple-400 uppercase tracking-widest">Banker of the Day</div>
-            <div className="text-[10px] text-gray-500 font-mono">{lang === 'en' ? 'Highest confidence · Recommended analysis' : 'Cea mai mare convingere · Analiză recomandată'}</div>
+            <div className="text-[10px] text-gray-500 font-mono">{lang !== 'ro' ? 'Highest confidence · Recommended analysis' : 'Cea mai mare convingere · Analiză recomandată'}</div>
           </div>
           <div className="ml-auto">
             <span className="text-[9px] font-bold px-2 py-1 rounded-full font-mono"
@@ -1020,7 +1020,7 @@ function BankerCard({ picks }: { picks: Pick[] }) {
           <div className="text-right ml-4 shrink-0">
             <div className="text-2xl font-bold font-mono text-purple-400">{isReal ? '' : '~'}{odd}</div>
             <div className="text-[9px] font-mono" style={{ color: isReal ? '#10b981' : '#6b7280' }}>
-              {isReal ? (lang === 'en' ? '✓ live odds' : '✓ cotă live') : (lang === 'en' ? 'estimated odds' : 'cotă estimată')}
+              {isReal ? (lang !== 'ro' ? '✓ live odds' : '✓ cotă live') : (lang !== 'ro' ? 'estimated odds' : 'cotă estimată')}
             </div>
           </div>
         </div>
@@ -1034,7 +1034,7 @@ function BankerCard({ picks }: { picks: Pick[] }) {
 function LoadingState() {
   const { lang } = useLang()
   const [step, setStep] = useState(0)
-  const steps = lang === 'en' ? [
+  const steps = lang !== 'ro' ? [
     "Loading today's matches...",
     'AI analysing each match...',
     'Computing Elo + form + probabilities...',
@@ -1053,7 +1053,7 @@ function LoadingState() {
     <div className="card p-10 text-center">
       <div className="spinner mx-auto mb-6" />
       <div className="text-green-400 text-sm font-mono mb-1">{steps[step]}</div>
-      <div className="text-gray-600 text-[11px] font-mono">{lang === 'en' ? 'XGBoost model · 225K matches trained' : 'Model XGBoost · 225K meciuri antrenament'}</div>
+      <div className="text-gray-600 text-[11px] font-mono">{lang !== 'ro' ? 'XGBoost model · 225K matches trained' : 'Model XGBoost · 225K meciuri antrenament'}</div>
     </div>
   )
 }
@@ -1064,7 +1064,7 @@ interface VipStats { total: number; wins: number; accuracy: number; this_month_t
 interface PickResult { date: string; home: string; away: string; result: 'win' | 'loss' | 'void'; confidence: number }
 
 // ── Model Streak Bar ──────────────────────────────────────────────────────────
-function ModelStreakBar({ results, lang }: { results: PickResult[]; lang: 'ro' | 'en' }) {
+function ModelStreakBar({ results, lang }: { results: PickResult[]; lang: import('@/lib/LangContext').Lang }) {
   if (!results.length) return null
   const last10 = results.slice(0, 10).reverse()  // oldest → newest
   const decisive = results.filter(r => r.result !== 'void')
@@ -1104,7 +1104,7 @@ function ModelStreakBar({ results, lang }: { results: PickResult[]; lang: 'ro' |
     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
       style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
       <span style={{ fontSize: 9, color: '#4b5563', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-        {lang === 'en' ? 'Last 10' : 'Ultimele 10'}
+        {lang !== 'ro' ? 'Last 10' : 'Ultimele 10'}
       </span>
       <div className="flex items-center gap-0.5">
         {last10.map((r, i) => dot(r, i))}
@@ -1197,7 +1197,7 @@ export default function DailyPage() {
         <div className="text-center mb-6 fade-in">
           <div className="text-4xl mb-2">🎯</div>
           <h1 className="font-display text-4xl text-white mb-1" style={{ letterSpacing: '0.05em' }}>
-            {lang === 'en' ? 'DAILY ANALYSIS' : 'ANALIZA ZILEI'}
+            {lang !== 'ro' ? 'DAILY ANALYSIS' : 'ANALIZA ZILEI'}
           </h1>
           <div className="text-green-400 text-sm font-mono uppercase tracking-widest mb-1">
             {data ? formatDate(data.date) : formatDate(today())}
@@ -1206,7 +1206,7 @@ export default function DailyPage() {
             )}
           </div>
           <p className="text-gray-500 text-xs font-mono">
-            {lang === 'en' ? 'XGBoost + Elo · 225K matches trained · Sorted by confidence' : 'XGBoost + Elo · 225K meciuri antrenament · Sortat după confidence'}
+            {lang !== 'ro' ? 'XGBoost + Elo · 225K matches trained · Sorted by confidence' : 'XGBoost + Elo · 225K meciuri antrenament · Sortat după confidence'}
           </p>
 
           {/* VIP accuracy pill */}
@@ -1217,12 +1217,12 @@ export default function DailyPage() {
               <span className="text-[11px] font-bold font-mono text-amber-400">VIP Picks</span>
               <span className="text-[11px] font-mono text-gray-400">
                 {vipStats && vipStats.this_month_total > 0
-                  ? `${vipStats.this_month_wins}/${vipStats.this_month_total} · ${vipStats.this_month_accuracy}% ${lang === 'en' ? 'this month' : 'luna aceasta'}`
-                  : lang === 'en' ? '~78.5% accuracy (backtest)' : '~78.5% acuratețe (backtest)'}
+                  ? `${vipStats.this_month_wins}/${vipStats.this_month_total} · ${vipStats.this_month_accuracy}% ${lang !== 'ro' ? 'this month' : 'luna aceasta'}`
+                  : lang !== 'ro' ? '~78.5% accuracy (backtest)' : '~78.5% acuratețe (backtest)'}
               </span>
               <a href="/upgrade" className="text-[10px] font-bold px-2 py-0.5 rounded-full ml-1"
                 style={{ background: 'rgba(234,179,8,0.2)', color: '#fbbf24' }}>
-                {lang === 'en' ? 'Pro $20 →' : 'Pro 99 RON →'}
+                {lang !== 'ro' ? 'Pro $20 →' : 'Pro 99 RON →'}
               </a>
             </div>
           </div>
@@ -1238,11 +1238,11 @@ export default function DailyPage() {
             <button onClick={enableNotifications}
               className="mt-3 px-4 py-2 rounded-full text-xs font-bold font-mono transition-all"
               style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
-              🔔 {lang === 'en' ? 'Enable alerts for new picks' : 'Activează alertele pentru pick-uri noi'}
+              🔔 {lang !== 'ro' ? 'Enable alerts for new picks' : 'Activează alertele pentru pick-uri noi'}
             </button>
           )}
           {notifPerm === 'granted' && (
-            <div className="mt-3 text-[10px] font-mono text-green-600">🔔 {lang === 'en' ? 'Alerts active' : 'Alerte active'}</div>
+            <div className="mt-3 text-[10px] font-mono text-green-600">🔔 {lang !== 'ro' ? 'Alerts active' : 'Alerte active'}</div>
           )}
         </div>
 
@@ -1256,10 +1256,10 @@ export default function DailyPage() {
           <div className="card p-8 text-center" style={{ border: '1px solid rgba(34,197,94,0.15)' }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
             <div style={{ color: '#4ade80', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
-              {lang === 'en' ? 'Picks being calculated...' : 'Picks în curs de calcul...'}
+              {lang !== 'ro' ? 'Picks being calculated...' : 'Picks în curs de calcul...'}
             </div>
             <div style={{ color: '#6b7280', fontSize: 13 }}>
-              {lang === 'en'
+              {lang !== 'ro'
                 ? 'Auto-updated at 07:00 and 13:00 EET (Eastern European Time).'
                 : 'Actualizare automată la 07:00 și 13:00 ora României (EET).'}
             </div>
@@ -1271,8 +1271,8 @@ export default function DailyPage() {
             {/* Stats bar */}
             <div className="grid grid-cols-3 gap-2 mb-5">
               {[
-                { label: lang === 'en' ? 'Matches analysed' : 'Meciuri analizate', val: data.total_fixtures, color: '#818cf8' },
-                { label: lang === 'en' ? 'Active picks' : 'Pick-uri active',        val: data.total_picks,    color: '#f59e0b' },
+                { label: lang !== 'ro' ? 'Matches analysed' : 'Meciuri analizate', val: data.total_fixtures, color: '#818cf8' },
+                { label: lang !== 'ro' ? 'Active picks' : 'Pick-uri active',        val: data.total_picks,    color: '#f59e0b' },
                 { label: 'High confidence',                                          val: data.high_conf,      color: '#22c55e' },
               ].map(({ label, val, color }) => (
                 <div key={label} className="card p-3 text-center">
@@ -1290,10 +1290,10 @@ export default function DailyPage() {
                   <span className="text-lg">📊</span>
                   <div>
                     <div className="text-xs font-bold text-green-400 font-mono uppercase tracking-widest">
-                      {lang === 'en' ? 'Live Performance' : 'Performanță Live'}
+                      {lang !== 'ro' ? 'Live Performance' : 'Performanță Live'}
                     </div>
                     <div className="text-[10px] text-gray-500 font-mono mt-0.5">
-                      {lang === 'en' ? 'Every pick verified in real time · 100% transparent' : 'Fiecare pick verificat în timp real · 100% transparent'}
+                      {lang !== 'ro' ? 'Every pick verified in real time · 100% transparent' : 'Fiecare pick verificat în timp real · 100% transparent'}
                     </div>
                   </div>
                 </div>
@@ -1315,7 +1315,7 @@ export default function DailyPage() {
             {/* Filter tabs */}
             <div className="flex gap-2 mb-5">
               {[
-                { key: 'all',  label: `${lang === 'en' ? 'All' : 'Toate'} (${data.total_picks})` },
+                { key: 'all',  label: `${lang !== 'ro' ? 'All' : 'Toate'} (${data.total_picks})` },
                 { key: 'high', label: `⚡ High Conf (${data.high_conf})` },
               ].map(({ key, label }) => (
                 <button key={key}
@@ -1336,7 +1336,7 @@ export default function DailyPage() {
               <div className="mb-4 px-4 py-3 rounded-xl text-xs font-mono"
                 style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
                 <span className="text-green-400 font-bold">⚡ High Confidence</span>
-                <span className="text-gray-400 ml-2">= confidence ≥ 60% · {lang === 'en' ? 'real accuracy ~70%+ on 33K match backtest' : 'acuratețe reală ~70%+ pe backtesting 33K meciuri'}</span>
+                <span className="text-gray-400 ml-2">= confidence ≥ 60% · {lang !== 'ro' ? 'real accuracy ~70%+ on 33K match backtest' : 'acuratețe reală ~70%+ pe backtesting 33K meciuri'}</span>
               </div>
             )}
 
@@ -1348,20 +1348,20 @@ export default function DailyPage() {
                 </div>
                 <div className="font-display text-xl text-gray-500 tracking-widest mb-2">
                   {filter === 'high'
-                    ? (lang === 'en' ? 'No HIGH confidence picks' : 'Niciun pick HIGH confidence')
-                    : (lang === 'en' ? 'No matches available today' : 'Niciun meci disponibil azi')}
+                    ? (lang !== 'ro' ? 'No HIGH confidence picks' : 'Niciun pick HIGH confidence')
+                    : (lang !== 'ro' ? 'No matches available today' : 'Niciun meci disponibil azi')}
                 </div>
                 <div className="text-gray-600 text-sm font-mono mb-4">
                   {filter === 'high'
-                    ? (lang === 'en' ? 'Model found no matches with confidence ≥65% today.' : 'Modelul nu a găsit meciuri cu confidence ≥65% azi.')
-                    : (lang === 'en' ? 'Supported leagues have no scheduled matches. Come back tomorrow.' : 'Ligile suportate nu au meciuri programate. Revino mâine.')}
+                    ? (lang !== 'ro' ? 'Model found no matches with confidence ≥65% today.' : 'Modelul nu a găsit meciuri cu confidence ≥65% azi.')
+                    : (lang !== 'ro' ? 'Supported leagues have no scheduled matches. Come back tomorrow.' : 'Ligile suportate nu au meciuri programate. Revino mâine.')}
                 </div>
                 {filter === 'high' && (
                   <button
                     onClick={() => setFilter('all')}
                     className="text-xs font-mono px-4 py-2 rounded-lg"
                     style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)' }}>
-                    {lang === 'en' ? 'See all outputs →' : 'Vezi toate analizele →'}
+                    {lang !== 'ro' ? 'See all outputs →' : 'Vezi toate analizele →'}
                   </button>
                 )}
               </div>
@@ -1389,15 +1389,15 @@ export default function DailyPage() {
                           <div className="text-center px-6 py-6">
                             <div className="text-2xl mb-2">🔒</div>
                             <div className="text-white font-bold text-base mb-1">
-                              {lang === 'en' ? `${shown.length - FREE_LIMIT} more outputs locked` : `Încă ${shown.length - FREE_LIMIT} analize blocate`}
+                              {lang !== 'ro' ? `${shown.length - FREE_LIMIT} more outputs locked` : `Încă ${shown.length - FREE_LIMIT} analize blocate`}
                             </div>
                             <div className="text-gray-400 text-xs font-mono mb-4">
-                              {lang === 'en' ? 'Upgrade to Analyst to unlock all outputs + Kelly% + stats' : 'Upgrade la Analyst pentru toate analizele + Kelly% + statistici'}
+                              {lang !== 'ro' ? 'Upgrade to Analyst to unlock all outputs + Kelly% + stats' : 'Upgrade la Analyst pentru toate analizele + Kelly% + statistici'}
                             </div>
                             <a href="/upgrade"
                               className="inline-block px-6 py-2.5 rounded-xl font-bold text-sm"
                               style={{ background: 'linear-gradient(135deg, #22d3ee, #3b82f6)', color: '#000' }}>
-                              {lang === 'en' ? '⚡ Unlock all outputs — $8/mo' : '⚡ Deblochează toate — 39 RON/lună'}
+                              {lang !== 'ro' ? '⚡ Unlock all outputs — $8/mo' : '⚡ Deblochează toate — 39 RON/lună'}
                             </a>
                           </div>
                         </div>
@@ -1432,24 +1432,24 @@ export default function DailyPage() {
             {/* Model info */}
             <div className="card p-5 mt-6">
               <div className="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-3 text-center">
-                {lang === 'en' ? 'ℹ️ How it works' : 'ℹ️ Cum funcționează'}
+                {lang !== 'ro' ? 'ℹ️ How it works' : 'ℹ️ Cum funcționează'}
               </div>
               <div className="space-y-2 text-xs text-gray-500 font-mono">
                 <div className="flex items-start gap-2">
                   <span className="text-green-400 shrink-0">🤖</span>
-                  <span>{lang === 'en' ? 'XGBoost model trained on 225,000 matches from 20+ European leagues' : 'Model XGBoost antrenat pe 225,000 meciuri din 20+ ligi europene'}</span>
+                  <span>{lang !== 'ro' ? 'XGBoost model trained on 225,000 matches from 20+ European leagues' : 'Model XGBoost antrenat pe 225,000 meciuri din 20+ ligi europene'}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-green-400 shrink-0">📊</span>
-                  <span>{lang === 'en' ? '84 features: bookmaker odds, Elo per league, recent form, H2H, xG' : '84 features: cote bookmakers, Elo per ligă, formă recentă, H2H, xG'}</span>
+                  <span>{lang !== 'ro' ? '84 features: bookmaker odds, Elo per league, recent form, H2H, xG' : '84 features: cote bookmakers, Elo per ligă, formă recentă, H2H, xG'}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-green-400 shrink-0">⚡</span>
-                  <span>{lang === 'en' ? 'High Confidence (≥60%): ~70% accuracy on 33,572 match backtest' : 'High Confidence (≥60%): ~70% acuratețe pe backtesting 33,572 meciuri'}</span>
+                  <span>{lang !== 'ro' ? 'High Confidence (≥60%): ~70% accuracy on 33,572 match backtest' : 'High Confidence (≥60%): ~70% acuratețe pe backtesting 33,572 meciuri'}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-gray-600 shrink-0">⚠️</span>
-                  <span>{lang === 'en' ? 'Educational purpose only. Not financial or betting advice.' : 'Scop educațional. Nu reprezintă sfaturi financiare sau de pariuri.'}</span>
+                  <span>{lang !== 'ro' ? 'Educational purpose only. Not financial or betting advice.' : 'Scop educațional. Nu reprezintă sfaturi financiare sau de pariuri.'}</span>
                 </div>
               </div>
             </div>
@@ -1460,10 +1460,10 @@ export default function DailyPage() {
       <footer className="border-t border-green-900/30 mt-12 py-6">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-xs font-mono text-gray-700">
-            {lang === 'en' ? 'Oxiano — Educational purpose only. Not betting advice.' : 'Oxiano — Scop educațional. Nu reprezintă sfaturi de pariuri.'}
+            {lang !== 'ro' ? 'Oxiano — Educational purpose only. Not betting advice.' : 'Oxiano — Scop educațional. Nu reprezintă sfaturi de pariuri.'}
           </p>
           <a href="/privacy" className="text-xs font-mono text-green-600 hover:text-green-400 mt-1 block">
-            {lang === 'en' ? 'Privacy Policy' : 'Politică de confidențialitate'}
+            {lang !== 'ro' ? 'Privacy Policy' : 'Politică de confidențialitate'}
           </a>
         </div>
       </footer>

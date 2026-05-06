@@ -59,7 +59,8 @@ export default function Navbar() {
     setIsNative(cap?.isNativePlatform?.() === true)
   }, [pathname])
 
-  const links = (isNative ? NATIVE_LINKS : WEB_LINKS)[lang]
+  const navLang = (lang === 'ro' ? 'ro' : 'en') as 'ro' | 'en'
+  const links = (isNative ? NATIVE_LINKS : WEB_LINKS)[navLang]
 
   return (
     <>
@@ -124,7 +125,7 @@ export default function Navbar() {
             {/* Lang toggle */}
             <select
               value={lang}
-              onChange={e => setLang(e.target.value as 'ro' | 'en')}
+              onChange={e => setLang(e.target.value as import('@/lib/LangContext').Lang)}
               style={{
                 marginLeft: 8,
                 padding: '5px 8px',
@@ -141,6 +142,9 @@ export default function Navbar() {
             >
               <option value="ro" style={{ background: '#0a1628', color: '#e5e7eb' }}>RO</option>
               <option value="en" style={{ background: '#0a1628', color: '#e5e7eb' }}>EN</option>
+              <option value="de" style={{ background: '#0a1628', color: '#e5e7eb' }}>DE</option>
+              <option value="es" style={{ background: '#0a1628', color: '#e5e7eb' }}>ES</option>
+              <option value="pt" style={{ background: '#0a1628', color: '#e5e7eb' }}>PT</option>
             </select>
 
             <Link href="/login" style={{
@@ -163,7 +167,7 @@ export default function Navbar() {
           <div className="mobile-menu-btn" style={{ display: 'none', alignItems: 'center', gap: 8 }}>
             <select
               value={lang}
-              onChange={e => setLang(e.target.value as 'ro' | 'en')}
+              onChange={e => setLang(e.target.value as import('@/lib/LangContext').Lang)}
               style={{
                 padding: '6px 10px',
                 borderRadius: 6,
@@ -179,6 +183,9 @@ export default function Navbar() {
             >
               <option value="ro" style={{ background: '#0a1628', color: '#e5e7eb' }}>RO</option>
               <option value="en" style={{ background: '#0a1628', color: '#e5e7eb' }}>EN</option>
+              <option value="de" style={{ background: '#0a1628', color: '#e5e7eb' }}>DE</option>
+              <option value="es" style={{ background: '#0a1628', color: '#e5e7eb' }}>ES</option>
+              <option value="pt" style={{ background: '#0a1628', color: '#e5e7eb' }}>PT</option>
             </select>
             <button
               onClick={() => setOpen(v => !v)}
@@ -233,7 +240,7 @@ export default function Navbar() {
           <div style={{ padding: '4px 18px' }} onClick={e => e.stopPropagation()}>
             <select
               value={lang}
-              onChange={e => setLang(e.target.value as 'ro' | 'en')}
+              onChange={e => setLang(e.target.value as import('@/lib/LangContext').Lang)}
               style={{
                 width: '100%',
                 padding: '12px 14px',
@@ -250,6 +257,9 @@ export default function Navbar() {
             >
               <option value="ro" style={{ background: '#0a1628', color: '#e5e7eb' }}>RO</option>
               <option value="en" style={{ background: '#0a1628', color: '#e5e7eb' }}>EN</option>
+              <option value="de" style={{ background: '#0a1628', color: '#e5e7eb' }}>DE</option>
+              <option value="es" style={{ background: '#0a1628', color: '#e5e7eb' }}>ES</option>
+              <option value="pt" style={{ background: '#0a1628', color: '#e5e7eb' }}>PT</option>
             </select>
           </div>
 

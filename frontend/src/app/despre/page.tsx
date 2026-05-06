@@ -39,8 +39,8 @@ const STATS_EN = [
 
 export default function DesprePage() {
   const { lang } = useLang()
-  const PILLARS = lang === 'en' ? PILLARS_EN : PILLARS_RO
-  const STATS = lang === 'en' ? STATS_EN : STATS_RO
+  const PILLARS = lang !== 'ro' ? PILLARS_EN : PILLARS_RO
+  const STATS = lang !== 'ro' ? STATS_EN : STATS_RO
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #051F14 0%, #0A1128 100%)', color: '#e5e7eb', fontFamily: 'system-ui, sans-serif' }}>
 
@@ -51,7 +51,7 @@ export default function DesprePage() {
             <img src="/logo-icon.jpg" alt="Oxiano" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
           </a>
           <span style={{ color: '#22d3ee', fontSize: 10, fontFamily: 'monospace', fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-            {lang === 'en' ? 'Defining the Edge' : 'Definim avantajul'}
+            {lang !== 'ro' ? 'Defining the Edge' : 'Definim avantajul'}
           </span>
         </div>
       </nav>
@@ -61,13 +61,13 @@ export default function DesprePage() {
         {/* Hero */}
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <div style={{ display: 'inline-block', background: '#0d2137', border: '1px solid #1e3a5f', borderRadius: 8, padding: '4px 14px', fontSize: 11, color: '#22d3ee', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>
-            {lang === 'en' ? "Oxiano's Mission" : 'Misiunea Oxiano'}
+            {lang !== 'ro' ? "Oxiano's Mission" : 'Misiunea Oxiano'}
           </div>
           <h1 style={{ fontSize: 42, fontWeight: 800, color: '#fff', margin: '0 0 20px', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-            {lang === 'en' ? <>Rigorous probabilities,<br />not arbitrary predictions</> : <>Probabilități riguroase,<br />nu predicții arbitrare</>}
+            {lang !== 'ro' ? <>Rigorous probabilities,<br />not arbitrary predictions</> : <>Probabilități riguroase,<br />nu predicții arbitrare</>}
           </h1>
           <p style={{ color: '#9ca3af', fontSize: 17, lineHeight: 1.75, maxWidth: 620, margin: '0 auto' }}>
-            {lang === 'en'
+            {lang !== 'ro'
               ? 'Most predictions are opinions. Oxiano is a system. We apply the same quantitative methodology used by hedge funds and algorithmic traders — gradient boosting, dynamic Elo ratings, market intelligence — to every match we analyse. The output is not a tip. It is a probability.'
               : 'Majoritatea predicțiilor sunt opinii. Oxiano este un sistem. Aplicăm aceeași metodologie quantitativă folosită de fondurile de hedging și traderii algoritmici — gradient boosting, ratinguri Elo dinamice, inteligență de piață — pentru fiecare meci analizat. Rezultatul nu este un pont. Este o probabilitate.'}
           </p>
@@ -85,21 +85,21 @@ export default function DesprePage() {
 
         {/* De ce am construit Oxiano */}
         <div style={{ background: '#0f1f35', border: '1px solid #1e3a5f', borderRadius: 16, padding: '36px 32px', marginBottom: 48 }}>
-          <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700, margin: '0 0 18px' }}>{lang === 'en' ? 'Why Oxiano exists' : 'De ce există Oxiano'}</h2>
+          <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700, margin: '0 0 18px' }}>{lang !== 'ro' ? 'Why Oxiano exists' : 'De ce există Oxiano'}</h2>
           <p style={{ color: '#9ca3af', fontSize: 15, lineHeight: 1.8, margin: '0 0 14px' }}>
-            {lang === 'en'
+            {lang !== 'ro'
               ? 'The football industry is full of noise — vague predictions, undocumented methods, selectively reported results. Oxiano was built as the opposite: a platform where every number has a formula, every formula has a source, and every result — win or loss — is recorded permanently in the Track Record.'
               : 'Industria predicțiilor fotbalistice e plină de zgomot — pronosticuri vagi, metode nedocumentate, rezultate raportate selectiv. Oxiano a fost construit ca antiteză: o platformă unde fiecare cifră are o formulă, fiecare formulă are o sursă, iar fiecare rezultat — câștig sau pierdere — rămâne permanent în Track Record.'}
           </p>
           <p style={{ color: '#9ca3af', fontSize: 15, lineHeight: 1.8, margin: 0 }}>
-            {lang === 'en'
+            {lang !== 'ro'
               ? 'Confidence, edge, Kelly percentage — these are not decorative labels. They are actionable outputs of a model trained on 225,000 matches, validated exclusively on data the model has never seen. That is the standard we hold ourselves to.'
               : 'Confidence, edge, procentul Kelly — nu sunt etichete decorative. Sunt rezultate acționabile ale unui model antrenat pe 225.000 de meciuri, validat exclusiv pe date pe care modelul nu le-a văzut niciodată. Acesta este standardul la care ne raportăm.'}
           </p>
         </div>
 
         {/* Piloni */}
-        <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700, marginBottom: 24 }}>{lang === 'en' ? 'How the platform works' : 'Cum funcționează platforma'}</h2>
+        <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700, marginBottom: 24 }}>{lang !== 'ro' ? 'How the platform works' : 'Cum funcționează platforma'}</h2>
         <div style={{ display: 'grid', gap: 16, marginBottom: 64 }}>
           {PILLARS.map(p => (
             <div key={p.title} style={{ background: '#0f1f35', border: '1px solid #1e3a5f', borderRadius: 14, padding: '24px 28px', display: 'flex', gap: 20 }}>
@@ -114,9 +114,9 @@ export default function DesprePage() {
 
         {/* Ce nu suntem */}
         <div style={{ background: '#1a0a0a', border: '1px solid #3b1212', borderRadius: 16, padding: '32px', marginBottom: 48 }}>
-          <h2 style={{ color: '#fca5a5', fontSize: 18, fontWeight: 700, margin: '0 0 16px' }}>{lang === 'en' ? 'What Oxiano is NOT' : 'Ce nu este Oxiano'}</h2>
+          <h2 style={{ color: '#fca5a5', fontSize: 18, fontWeight: 700, margin: '0 0 16px' }}>{lang !== 'ro' ? 'What Oxiano is NOT' : 'Ce nu este Oxiano'}</h2>
           <ul style={{ color: '#9ca3af', fontSize: 14, lineHeight: 2, margin: 0, paddingLeft: 20 }}>
-            {lang === 'en' ? <>
+            {lang !== 'ro' ? <>
               <li>We are not a betting service and do not hold an ONJN licence or equivalent</li>
               <li>We do not guarantee profit and do not claim our picks are winners</li>
               <li>We do not delete or retroactively modify Track Record results</li>
@@ -135,36 +135,36 @@ export default function DesprePage() {
         {/* CTA */}
         <div style={{ background: 'linear-gradient(135deg, #052e16 0%, #0c1a3a 100%)', border: '1px solid #166534', borderRadius: 18, padding: '40px 32px', textAlign: 'center' }}>
           <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 10px' }}>
-            {lang === 'en' ? 'Explore the platform' : 'Explorează platforma'}
+            {lang !== 'ro' ? 'Explore the platform' : 'Explorează platforma'}
           </h2>
           <p style={{ color: '#9ca3af', fontSize: 15, margin: '0 0 28px', lineHeight: 1.6 }}>
-            {lang === 'en'
+            {lang !== 'ro'
               ? 'Daily picks auto-updated · Public & verifiable track record · Per-league analysis'
               : 'Picks zilnice actualizate automat · Track record public și verificabil · Analiză per ligă'}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href="/daily" style={{ background: '#22d3ee', color: '#000', padding: '12px 28px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 15 }}>
-              {lang === 'en' ? "Today's Picks →" : 'Picks de azi →'}
+              {lang !== 'ro' ? "Today's Picks →" : 'Picks de azi →'}
             </a>
             <a href="/track-record" style={{ background: 'transparent', color: '#22d3ee', padding: '12px 28px', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 15, border: '1px solid #22d3ee' }}>
               Track Record
             </a>
             <a href="/blog/cum-sa-folosesti-oxiano-ghid-utilizator" style={{ background: 'transparent', color: '#9ca3af', padding: '12px 28px', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 15, border: '1px solid #374151' }}>
-              📖 {lang === 'en' ? 'User Guide' : 'Ghid utilizare'}
+              📖 {lang !== 'ro' ? 'User Guide' : 'Ghid utilizare'}
             </a>
           </div>
           <div style={{ marginTop: 16, fontSize: 11, color: '#4b5563' }}>
-            {lang === 'en' ? 'Statistical analysis for educational purposes · Not betting advice' : 'Analiză statistică în scop educațional · Nu constituie sfat de pariere'}
+            {lang !== 'ro' ? 'Statistical analysis for educational purposes · Not betting advice' : 'Analiză statistică în scop educațional · Nu constituie sfat de pariere'}
           </div>
         </div>
 
       </main>
 
       <footer style={{ borderTop: '1px solid #1f2937', padding: '24px', textAlign: 'center', color: '#4b5563', fontSize: 12 }}>
-        © 2026 Oxiano · {lang === 'en' ? 'Defining the Edge' : 'Definim avantajul'} ·{' '}
-        <a href="/terms" style={{ color: '#4b5563' }}>{lang === 'en' ? 'Terms' : 'Termeni'}</a> ·{' '}
-        <a href="/privacy" style={{ color: '#4b5563' }}>{lang === 'en' ? 'Privacy' : 'Confidențialitate'}</a> ·{' '}
-        <a href="/despre" style={{ color: '#6b7280' }}>{lang === 'en' ? 'About' : 'Despre'}</a>
+        © 2026 Oxiano · {lang !== 'ro' ? 'Defining the Edge' : 'Definim avantajul'} ·{' '}
+        <a href="/terms" style={{ color: '#4b5563' }}>{lang !== 'ro' ? 'Terms' : 'Termeni'}</a> ·{' '}
+        <a href="/privacy" style={{ color: '#4b5563' }}>{lang !== 'ro' ? 'Privacy' : 'Confidențialitate'}</a> ·{' '}
+        <a href="/despre" style={{ color: '#6b7280' }}>{lang !== 'ro' ? 'About' : 'Despre'}</a>
       </footer>
     </div>
   )

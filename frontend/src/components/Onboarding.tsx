@@ -66,7 +66,7 @@ export default function Onboarding() {
 
   if (!visible) return null
 
-  const steps = STEPS[lang]
+  const steps = STEPS[(lang === 'ro' ? 'ro' : 'en') as 'ro' | 'en']
   const s = steps[step]
   const isLast = step === steps.length - 1
 

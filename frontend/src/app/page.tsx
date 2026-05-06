@@ -65,7 +65,7 @@ function calcConfidence(home_w: number, draw: number, away_w: number, lang = 'ro
   const gap = max - second
   let score = Math.round(40 + gap * 1.2 + (max - 33) * 0.5)
   score = Math.min(98, Math.max(42, score))
-  const label = lang === 'en'
+  const label = lang !== 'ro'
     ? (score >= 80 ? 'Very high' : score >= 65 ? 'High' : score >= 50 ? 'Medium' : 'Low')
     : (score >= 80 ? 'Foarte ridicată' : score >= 65 ? 'Ridicată' : score >= 50 ? 'Medie' : 'Scăzută')
   const color = score >= 80 ? '#10b981' : score >= 65 ? '#f59e0b' : score >= 50 ? '#f97316' : '#ef4444'
@@ -88,7 +88,7 @@ function pOver(lambda: number, k: number) { // P(X > k)
 
 // ── Calcul toate piețele disponibile ─────────────────────────────────────────
 function calcAllMarkets(prediction: Prediction, lang = 'ro') {
-  const en = lang === 'en'
+  const en = lang !== 'ro'
   const pred = prediction.prediction || {}
   const home_w = pred.home_win ?? 0
   const draw   = pred.draw ?? 0
@@ -244,7 +244,7 @@ function calcBetValue(prediction: Prediction, lang = 'ro') {
       // Convingere = cat depaseste pragul de 55%
       const conviction = Math.round((p - 0.55) * 100)
 
-      const rating = lang === 'en'
+      const rating = lang !== 'ro'
         ? (p >= 0.75 ? '🔥 High conviction' : p >= 0.65 ? '✅ Good conviction' : '⚡ Moderate')
         : (p >= 0.75 ? '🔥 Convingere ridicată' : p >= 0.65 ? '✅ Convingere bună' : '⚡ Moderat')
       const color = p >= 0.75 ? '#10b981' : p >= 0.65 ? '#f59e0b' : '#6b7280'
@@ -275,7 +275,7 @@ function getTop3Bets(prediction: Prediction, lang = 'ro') {
     .slice(0, 3)
     .map(b => ({
       ...b,
-      confidence: lang === 'en'
+      confidence: lang !== 'ro'
         ? (b.probability >= 70 ? '🟢 Confident' : '🟡 Moderate')
         : (b.probability >= 70 ? '🟢 Sigur' : '🟡 Moderat'),
     }))
@@ -465,7 +465,7 @@ function TeamStatsCard({ stats, teamName, color }: { stats: any; teamName: strin
       </div>
       {form.length > 0 && (
         <div className="mb-4">
-          <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">{lang === 'en' ? 'Recent matches' : 'Ultimele meciuri'}</div>
+          <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">{lang !== 'ro' ? 'Recent matches' : 'Ultimele meciuri'}</div>
           <div className="flex gap-1">{form.map((r: string, i: number) => <FormBadge key={i} result={r} />)}</div>
           <div className="text-xs text-gray-500 mt-2 font-mono">
             {wins}V · {draws}E · {form.length - wins - draws}Î
@@ -477,7 +477,7 @@ function TeamStatsCard({ stats, teamName, color }: { stats: any; teamName: strin
         {[
           { label: 'xG For', value: avgXgFor.toFixed(2), icon: '⚽' },
           { label: 'xG Against', value: avgXgAg.toFixed(2), icon: '🛡️' },
-          { label: lang === 'en' ? 'Goals/match' : 'Goluri/meci', value: stats.goals_avg?.toFixed(2) || avgXgFor.toFixed(2), icon: '📊' },
+          { label: lang !== 'ro' ? 'Goals/match' : 'Goluri/meci', value: stats.goals_avg?.toFixed(2) || avgXgFor.toFixed(2), icon: '📊' },
           { label: 'Elo Rating', value: stats.elo_rating || '—', icon: '📈' },
         ].map(s => (
           <div key={s.label} className="bg-gray-800/40 rounded-lg p-2.5">
@@ -488,7 +488,7 @@ function TeamStatsCard({ stats, teamName, color }: { stats: any; teamName: strin
       </div>
       {Array.isArray(xgFor) && xgFor.length > 0 && (
         <div>
-          <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">{lang === 'en' ? 'xG recent matches' : 'xG ultimele meciuri'}</div>
+          <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">{lang !== 'ro' ? 'xG recent matches' : 'xG ultimele meciuri'}</div>
           <div className="flex items-end gap-1 h-10">
             {xgFor.slice(-5).map((v: number, i: number) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
@@ -496,7 +496,7 @@ function TeamStatsCard({ stats, teamName, color }: { stats: any; teamName: strin
               </div>
             ))}
           </div>
-          <div className="text-[9px] text-gray-700 text-center mt-1 font-mono">{lang === 'en' ? 'recent matches →' : 'meciuri recente →'}</div>
+          <div className="text-[9px] text-gray-700 text-center mt-1 font-mono">{lang !== 'ro' ? 'recent matches →' : 'meciuri recente →'}</div>
         </div>
       )}
     </div>
@@ -524,7 +524,7 @@ function OddsComparator({ prediction }: { prediction: Prediction }) {
 
   return (
     <div className="mt-5 pt-5 border-t border-gray-800/50">
-      <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-3 text-center">{lang === 'en' ? '🔍 Check your odds — Value or not?' : '🔍 Verifică cota ta — Valoare sau nu?'}</div>
+      <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-3 text-center">{lang !== 'ro' ? '🔍 Check your odds — Value or not?' : '🔍 Verifică cota ta — Valoare sau nu?'}</div>
       <div className="flex gap-2 mb-3">
         {['1','X','2'].map(m => (
           <button key={m} onClick={() => setMarket(m)}
@@ -534,13 +534,13 @@ function OddsComparator({ prediction }: { prediction: Prediction }) {
               border: `1px solid ${market === m ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
               color: market === m ? '#60a5fa' : '#6b7280',
             }}>
-            {m === '1' ? `1 ${prediction.home_team.split(' ')[0]}` : m === '2' ? `2 ${prediction.away_team.split(' ')[0]}` : (lang === 'en' ? 'X Draw' : 'X Egal')}
+            {m === '1' ? `1 ${prediction.home_team.split(' ')[0]}` : m === '2' ? `2 ${prediction.away_team.split(' ')[0]}` : (lang !== 'ro' ? 'X Draw' : 'X Egal')}
           </button>
         ))}
       </div>
       <div className="flex gap-2 items-center">
         <input
-          type="number" step="0.01" min="1.01" placeholder={lang === 'en' ? 'Bookmaker odds (e.g. 2.15)' : 'Cota la bookmaker (ex: 2.15)'}
+          type="number" step="0.01" min="1.01" placeholder={lang !== 'ro' ? 'Bookmaker odds (e.g. 2.15)' : 'Cota la bookmaker (ex: 2.15)'}
           value={inputOdd}
           onChange={e => setInputOdd(e.target.value)}
           className="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-blue-500"
@@ -553,15 +553,15 @@ function OddsComparator({ prediction }: { prediction: Prediction }) {
         }}>
           <div className="text-center mb-3">
             <div className="text-2xl font-bold font-mono" style={{ color: isValue ? '#10b981' : '#ef4444' }}>
-              {isValue ? (lang === 'en' ? '✅ HIGH EDGE' : '✅ EDGE RIDICAT') : (lang === 'en' ? '❌ No edge' : '❌ Fără edge')}
+              {isValue ? (lang !== 'ro' ? '✅ HIGH EDGE' : '✅ EDGE RIDICAT') : (lang !== 'ro' ? '❌ No edge' : '❌ Fără edge')}
             </div>
             <div className="text-[10px] text-gray-500 font-mono mt-1">
-              {lang === 'en' ? 'Model probability' : 'Probabilitate model'}: {Math.round(prob*100)}% · {lang === 'en' ? 'Implied odds prob.' : 'Prob. implicită cotă'}: {Math.round(impliedP*100)}%
+              {lang !== 'ro' ? 'Model probability' : 'Probabilitate model'}: {Math.round(prob*100)}% · {lang !== 'ro' ? 'Implied odds prob.' : 'Prob. implicită cotă'}: {Math.round(impliedP*100)}%
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-              <div className="text-[10px] text-gray-600 uppercase tracking-widest">{lang === 'en' ? 'Edge vs odds' : 'Avantaj față de cotă'}</div>
+              <div className="text-[10px] text-gray-600 uppercase tracking-widest">{lang !== 'ro' ? 'Edge vs odds' : 'Avantaj față de cotă'}</div>
               <div className="text-base font-bold font-mono" style={{ color: isValue ? '#10b981' : '#ef4444' }}>
                 {edge > 0 ? '+' : ''}{edge}%
               </div>
@@ -688,12 +688,12 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
   const valueBets = calcBetValue(prediction, lang)
 
   const tabs = [
-    { key: 'markets',   label: lang === 'en' ? '🎯 Markets' : '🎯 Piețe' },
-    { key: 'value',     label: `💎 ${lang === 'en' ? 'Value' : 'Valoare'}${isProOrOwner && valueBets.length > 0 ? ` (${valueBets.length})` : ''}`, locked: !isProOrOwner },
-    { key: 'scores',    label: lang === 'en' ? '⚽ Scores' : '⚽ Scoruri', locked: isFree },
+    { key: 'markets',   label: lang !== 'ro' ? '🎯 Markets' : '🎯 Piețe' },
+    { key: 'value',     label: `💎 ${lang !== 'ro' ? 'Value' : 'Valoare'}${isProOrOwner && valueBets.length > 0 ? ` (${valueBets.length})` : ''}`, locked: !isProOrOwner },
+    { key: 'scores',    label: lang !== 'ro' ? '⚽ Scores' : '⚽ Scoruri', locked: isFree },
     { key: 'stats',     label: '📊 Stats' },
-    { key: 'standings', label: lang === 'en' ? '🏆 Stand.' : '🏆 Clas.' },
-    { key: 'models',    label: lang === 'en' ? '🤖 Models' : '🤖 Modele', locked: !isProOrOwner },
+    { key: 'standings', label: lang !== 'ro' ? '🏆 Stand.' : '🏆 Clas.' },
+    { key: 'models',    label: lang !== 'ro' ? '🤖 Models' : '🤖 Modele', locked: !isProOrOwner },
   ]
 
   return (
@@ -707,14 +707,14 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
           <div className="flex items-center justify-center gap-2">
             <div className="text-right" style={{ flex: 1, minWidth: 0 }}>
               <div className="font-display text-base text-white tracking-wide truncate">{prediction.home_team}</div>
-              <div className="text-xs text-gray-600 font-mono mt-1">{lang === 'en' ? 'HOME' : 'GAZDĂ'}</div>
+              <div className="text-xs text-gray-600 font-mono mt-1">{lang !== 'ro' ? 'HOME' : 'GAZDĂ'}</div>
             </div>
             <div className="shrink-0 px-2 py-1 rounded-lg bg-gray-800/60 border border-gray-700">
               <span className="font-mono text-gray-500 text-sm">VS</span>
             </div>
             <div className="text-left" style={{ flex: 1, minWidth: 0 }}>
               <div className="font-display text-base text-white tracking-wide truncate">{prediction.away_team}</div>
-              <div className="text-xs text-gray-600 font-mono mt-1">{lang === 'en' ? 'AWAY' : 'OASPETE'}</div>
+              <div className="text-xs text-gray-600 font-mono mt-1">{lang !== 'ro' ? 'AWAY' : 'OASPETE'}</div>
             </div>
           </div>
         </div>
@@ -723,14 +723,14 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
           <div className="relative mt-4">
             <div style={{ filter: 'blur(6px)' }} className="pointer-events-none select-none flex justify-around items-end">
               <ProbBar label={prediction.home_team.split(' ')[0]} value={home_w} color="#3b82f6" />
-              <ProbBar label={lang === 'en' ? 'Draw' : 'Egal'} value={draw} color="#6b7280" />
+              <ProbBar label={lang !== 'ro' ? 'Draw' : 'Egal'} value={draw} color="#6b7280" />
               <ProbBar label={prediction.away_team.split(' ')[0]} value={away_w} color="#f97316" />
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <span className="text-white text-xs font-bold">🔒 {lang === 'en' ? 'Probabilities locked' : 'Probabilități blocate'}</span>
+              <span className="text-white text-xs font-bold">🔒 {lang !== 'ro' ? 'Probabilities locked' : 'Probabilități blocate'}</span>
               <a href="/upgrade" className="px-4 py-1.5 rounded-full text-xs font-bold"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', color: 'white' }}>
-                ⚡ {lang === 'en' ? 'Unlock — $8/mo' : 'Deblochează — 39 RON/lună'}
+                ⚡ {lang !== 'ro' ? 'Unlock — $8/mo' : 'Deblochează — 39 RON/lună'}
               </a>
             </div>
           </div>
@@ -750,7 +750,7 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
             <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-700/40 bg-gray-800/30">
               <div className="w-2 h-2 rounded-full bg-gray-600" />
               <span className="text-xs font-bold font-mono text-gray-600" style={{ filter: 'blur(4px)' }}>
-                {lang === 'en' ? 'AI Confidence' : 'Încredere AI'}: {conf.score}%
+                {lang !== 'ro' ? 'AI Confidence' : 'Încredere AI'}: {conf.score}%
               </span>
               <span className="text-[10px] text-gray-600">🔒</span>
             </div>
@@ -759,7 +759,7 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
               style={{ borderColor: `${conf.color}40`, backgroundColor: `${conf.color}15` }}>
               <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: conf.color }} />
               <span className="text-xs font-bold font-mono" style={{ color: conf.color }}>
-                {lang === 'en' ? 'AI Confidence' : 'Încredere AI'}: {conf.score}%
+                {lang !== 'ro' ? 'AI Confidence' : 'Încredere AI'}: {conf.score}%
               </span>
               <span className="text-[10px] text-gray-500">({conf.label})</span>
             </div>
@@ -769,13 +769,13 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
         {/* Cote bookmakers */}
         <div className="mt-4 pt-4 border-t border-gray-800/60">
           <div className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-3 text-center">
-            💰 {isFree ? (lang === 'en' ? 'Estimated bookmaker odds' : 'Cote estimate bookmakers') : (lang === 'en' ? 'Estimated bookmaker odds' : 'Cote estimate bookmakers')}
+            💰 {isFree ? (lang !== 'ro' ? 'Estimated bookmaker odds' : 'Cote estimate bookmakers') : (lang !== 'ro' ? 'Estimated bookmaker odds' : 'Cote estimate bookmakers')}
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: lang === 'en' ? '1 Home' : '1 Gazdă', odd: (100/(Math.max(home_w,1)*1.08)).toFixed(2), color: '#3b82f6' },
-              { label: lang === 'en' ? 'X Draw' : 'X Egal', odd: (100/(Math.max(draw,1)*1.08)).toFixed(2), color: '#6b7280' },
-              { label: lang === 'en' ? '2 Away' : '2 Oaspete', odd: (100/(Math.max(away_w,1)*1.08)).toFixed(2), color: '#f97316' },
+              { label: lang !== 'ro' ? '1 Home' : '1 Gazdă', odd: (100/(Math.max(home_w,1)*1.08)).toFixed(2), color: '#3b82f6' },
+              { label: lang !== 'ro' ? 'X Draw' : 'X Egal', odd: (100/(Math.max(draw,1)*1.08)).toFixed(2), color: '#6b7280' },
+              { label: lang !== 'ro' ? '2 Away' : '2 Oaspete', odd: (100/(Math.max(away_w,1)*1.08)).toFixed(2), color: '#f97316' },
             ].map(o => (
               <div key={o.label} className="bg-gray-800/50 rounded-xl p-3 text-center border border-gray-700/30">
                 <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{o.label}</div>
@@ -783,12 +783,12 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
               </div>
             ))}
           </div>
-          <div className="text-[9px] text-gray-700 text-center mt-2 font-mono">{lang === 'en' ? '* Estimated odds with 8% margin · Verify at Betano/bet365' : '* Cote estimate cu marjă 8% · Verifică la Betano/bet365'}</div>
+          <div className="text-[9px] text-gray-700 text-center mt-2 font-mono">{lang !== 'ro' ? '* Estimated odds with 8% margin · Verify at Betano/bet365' : '* Cote estimate cu marjă 8% · Verifică la Betano/bet365'}</div>
         </div>
 
         {/* Top 3 pariuri */}
         <div className="mt-4 pt-4 border-t border-gray-800/60">
-          <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 text-center">🏆 {lang === 'en' ? 'Top 3 recommended analyses' : 'Top 3 analize recomandate'}</div>
+          <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 text-center">🏆 {lang !== 'ro' ? 'Top 3 recommended analyses' : 'Top 3 analize recomandate'}</div>
           <div className="space-y-2">
             {top3.map((bet, i) => (
               <div key={i} className="flex items-center gap-3 bg-gray-800/40 rounded-xl px-3 py-2.5">
@@ -798,7 +798,7 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-white font-semibold truncate">{bet.name}</div>
-                  <div className="text-[10px] text-gray-500 font-mono">{bet.confidence} · {lang === 'en' ? 'odds ~' : 'cotă ~'}{bet.odds}</div>
+                  <div className="text-[10px] text-gray-500 font-mono">{bet.confidence} · {lang !== 'ro' ? 'odds ~' : 'cotă ~'}{bet.odds}</div>
                 </div>
                 <div className="text-sm font-bold font-mono shrink-0" style={{ color: getProbColor(bet.probability) }}>
                   {bet.probability}%
@@ -875,11 +875,11 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"
                       style={{ background: 'rgba(0,0,0,0.5)' }}>
-                      <div className="text-white text-sm font-bold text-center">🔒 {lang === 'en' ? 'Markets locked' : 'Piețe blocate'}</div>
-                      <div className="text-gray-400 text-xs text-center px-4">Over/Under · BTTS · {lang === 'en' ? 'Double Chance' : 'Șansă dublă'} · Score Matrix</div>
+                      <div className="text-white text-sm font-bold text-center">🔒 {lang !== 'ro' ? 'Markets locked' : 'Piețe blocate'}</div>
+                      <div className="text-gray-400 text-xs text-center px-4">Over/Under · BTTS · {lang !== 'ro' ? 'Double Chance' : 'Șansă dublă'} · Score Matrix</div>
                       <a href="/upgrade" className="px-5 py-2 rounded-full text-xs font-bold"
                         style={{ background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', color: 'white' }}>
-                        ⚡ Analyst — {lang === 'en' ? '$8/mo' : '39 RON/lună'}
+                        ⚡ Analyst — {lang !== 'ro' ? '$8/mo' : '39 RON/lună'}
                       </a>
                     </div>
                   </div>
@@ -912,23 +912,23 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
       {activeTab === 'value' && !isProOrOwner && (
         <div className="card p-6 fade-in text-center" style={{ overflow: 'hidden' }}>
           <div className="text-3xl mb-3">💎</div>
-          <div className="text-sm font-bold text-white mb-2">{lang === 'en' ? 'Value Signal — Pro feature' : 'Semnal Valoare — funcție Pro'}</div>
-          <div className="text-xs text-gray-500 mb-4 px-4">{lang === 'en' ? 'See exactly which selections have positive expected value vs. the market. Exclusive to Pro.' : 'Vezi exact ce selecții au valoare așteptată pozitivă față de piață. Exclusiv Pro.'}</div>
+          <div className="text-sm font-bold text-white mb-2">{lang !== 'ro' ? 'Value Signal — Pro feature' : 'Semnal Valoare — funcție Pro'}</div>
+          <div className="text-xs text-gray-500 mb-4 px-4">{lang !== 'ro' ? 'See exactly which selections have positive expected value vs. the market. Exclusive to Pro.' : 'Vezi exact ce selecții au valoare așteptată pozitivă față de piață. Exclusiv Pro.'}</div>
           <a href="/upgrade" className="inline-block px-6 py-2.5 rounded-full text-sm font-bold"
             style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', color: 'white' }}>
-            {lang === 'en' ? 'Upgrade to Pro — $20/mo' : 'Upgrade la Pro — 99 RON/lună'}
+            {lang !== 'ro' ? 'Upgrade to Pro — $20/mo' : 'Upgrade la Pro — 99 RON/lună'}
           </a>
         </div>
       )}
       {activeTab === 'value' && isProOrOwner && (
         <div className="card p-5 fade-in" style={{ overflow: 'hidden' }}>
-          <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1 text-center">💎 {lang === 'en' ? 'High Conviction Markets' : 'Piețe cu Convingere Ridicată'}</div>
-          <div className="text-[10px] text-gray-600 text-center mb-1 font-mono">{lang === 'en' ? 'Markets where model confidence ≥55% · Estimated odds only' : 'Piețe cu probabilitate model ≥55% · Cote doar estimate'}</div>
+          <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1 text-center">💎 {lang !== 'ro' ? 'High Conviction Markets' : 'Piețe cu Convingere Ridicată'}</div>
+          <div className="text-[10px] text-gray-600 text-center mb-1 font-mono">{lang !== 'ro' ? 'Markets where model confidence ≥55% · Estimated odds only' : 'Piețe cu probabilitate model ≥55% · Cote doar estimate'}</div>
           <div className="text-[10px] text-amber-600 text-center mb-4 font-mono">
-            {lang === 'en' ? '⚠️ Estimated odds — always verify at your bookmaker before betting' : '⚠️ Cote estimate — verifică întotdeauna la bookmaker-ul tău înainte de a paria'}
+            {lang !== 'ro' ? '⚠️ Estimated odds — always verify at your bookmaker before betting' : '⚠️ Cote estimate — verifică întotdeauna la bookmaker-ul tău înainte de a paria'}
           </div>
           {valueBets.length === 0 ? (
-            <div className="text-center py-8 text-gray-600 text-sm">{lang === 'en' ? 'No high-conviction bets for this match' : 'Nu există pariuri cu convingere ridicată pentru acest meci'}</div>
+            <div className="text-center py-8 text-gray-600 text-sm">{lang !== 'ro' ? 'No high-conviction bets for this match' : 'Nu există pariuri cu convingere ridicată pentru acest meci'}</div>
           ) : (
             <div className="space-y-3">
               {valueBets.map((bet, i) => (
@@ -940,25 +940,25 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-lg font-bold font-mono" style={{ color: bet.color }}>{bet.probability}%</div>
-                      <div className="text-[10px] text-gray-600 font-mono">{lang === 'en' ? 'model probability' : 'probabilitate model'}</div>
+                      <div className="text-[10px] text-gray-600 font-mono">{lang !== 'ro' ? 'model probability' : 'probabilitate model'}</div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-                      <div className="text-[10px] text-gray-600 uppercase tracking-widest">{lang === 'en' ? 'Fair odds (model)' : 'Cotă corectă (model)'}</div>
+                      <div className="text-[10px] text-gray-600 uppercase tracking-widest">{lang !== 'ro' ? 'Fair odds (model)' : 'Cotă corectă (model)'}</div>
                       <div className="text-sm font-bold font-mono text-white">{bet.fair_odds}</div>
-                      <div className="text-[9px] text-gray-700 mt-0.5">{lang === 'en' ? 'bet if odds ≥ this' : 'pariază dacă cota ≥ asta'}</div>
+                      <div className="text-[9px] text-gray-700 mt-0.5">{lang !== 'ro' ? 'bet if odds ≥ this' : 'pariază dacă cota ≥ asta'}</div>
                     </div>
                     <div className="bg-gray-900/50 rounded-lg p-2 text-center">
-                      <div className="text-[10px] text-gray-600 uppercase tracking-widest">{lang === 'en' ? 'Est. bookmaker odds*' : 'Cotă est. bookmaker*'}</div>
+                      <div className="text-[10px] text-gray-600 uppercase tracking-widest">{lang !== 'ro' ? 'Est. bookmaker odds*' : 'Cotă est. bookmaker*'}</div>
                       <div className="text-sm font-bold font-mono" style={{ color: bet.color }}>{bet.est_bk_odds}</div>
-                      <div className="text-[9px] text-gray-700 mt-0.5">{lang === 'en' ? '~8% margin applied' : 'marjă ~8% aplicată'}</div>
+                      <div className="text-[9px] text-gray-700 mt-0.5">{lang !== 'ro' ? '~8% margin applied' : 'marjă ~8% aplicată'}</div>
                     </div>
                   </div>
                 </div>
               ))}
               <div className="text-[10px] text-gray-700 text-center mt-3 font-mono px-4">
-                {lang === 'en' ? '* Estimated odds based on model probabilities + 8% bookmaker margin. Not real market odds. Always verify before betting. Bet responsibly.' : '* Cote estimate pe baza probabilităților modelului + marjă 8%. Nu sunt cote reale de piață. Verificați întotdeauna înainte de a paria. Pariați responsabil.'}
+                {lang !== 'ro' ? '* Estimated odds based on model probabilities + 8% bookmaker margin. Not real market odds. Always verify before betting. Bet responsibly.' : '* Cote estimate pe baza probabilităților modelului + marjă 8%. Nu sunt cote reale de piață. Verificați întotdeauna înainte de a paria. Pariați responsabil.'}
               </div>
             </div>
           )}
@@ -973,8 +973,8 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
         <div className="card p-5 fade-in" style={{ overflow: 'hidden' }}>
           <div className="flex gap-4 mb-4 text-center">
             {[
-              { label: lang === 'en' ? 'xG Home' : 'xG Gazdă', value: prediction.expected_goals?.home?.toFixed(2) ?? '—', color: '#3b82f6' },
-              { label: lang === 'en' ? 'xG Away' : 'xG Oaspete', value: prediction.expected_goals?.away?.toFixed(2) ?? '—', color: '#f97316' },
+              { label: lang !== 'ro' ? 'xG Home' : 'xG Gazdă', value: prediction.expected_goals?.home?.toFixed(2) ?? '—', color: '#3b82f6' },
+              { label: lang !== 'ro' ? 'xG Away' : 'xG Oaspete', value: prediction.expected_goals?.away?.toFixed(2) ?? '—', color: '#f97316' },
             ].map(s => (
               <div key={s.label} className="flex-1 bg-gray-800/40 rounded-xl p-4">
                 <div className="text-3xl font-bold font-mono" style={{ color: s.color }}>{s.value}</div>
@@ -1028,15 +1028,15 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
                   </table>
                 </div>
                 <div className="flex gap-3 justify-center mt-2 text-[9px] font-mono text-gray-600">
-                  <span><span className="text-blue-400">■</span> {lang === 'en' ? 'Home win' : 'Victorie gazdă'}</span>
-                  <span><span className="text-gray-400">■</span> {lang === 'en' ? 'Draw' : 'Egal'}</span>
-                  <span><span className="text-orange-400">■</span> {lang === 'en' ? 'Away win' : 'Victorie oaspete'}</span>
+                  <span><span className="text-blue-400">■</span> {lang !== 'ro' ? 'Home win' : 'Victorie gazdă'}</span>
+                  <span><span className="text-gray-400">■</span> {lang !== 'ro' ? 'Draw' : 'Egal'}</span>
+                  <span><span className="text-orange-400">■</span> {lang !== 'ro' ? 'Away win' : 'Victorie oaspete'}</span>
                 </div>
               </div>
             )
           })()}
 
-          <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-3 text-center">{lang === 'en' ? 'Most likely scores' : 'Top scoruri probabile'}</div>
+          <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-3 text-center">{lang !== 'ro' ? 'Most likely scores' : 'Top scoruri probabile'}</div>
           <div className="grid grid-cols-2 gap-2">
             {(prediction.top_scores || []).slice(0, 8).map((s: any, i: number) => (
               <div key={i} className="flex justify-between items-center bg-gray-800/30 rounded-lg px-3 py-2">
@@ -1057,22 +1057,22 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
               <div className="flex justify-between items-center mb-4">
                 <div className="text-center" style={{ flex: 1 }}>
                   <div className="text-sm font-bold text-blue-400 truncate">{prediction.home_team.split(' ').slice(-1)[0]}</div>
-                  <div className="text-[10px] text-gray-600">{lang === 'en' ? 'HOME' : 'GAZDĂ'}</div>
+                  <div className="text-[10px] text-gray-600">{lang !== 'ro' ? 'HOME' : 'GAZDĂ'}</div>
                 </div>
                 <div className="text-gray-600 text-xs font-mono px-3">VS</div>
                 <div className="text-center" style={{ flex: 1 }}>
                   <div className="text-sm font-bold text-orange-400 truncate">{prediction.away_team.split(' ').slice(-1)[0]}</div>
-                  <div className="text-[10px] text-gray-600">{lang === 'en' ? 'AWAY' : 'OASPETE'}</div>
+                  <div className="text-[10px] text-gray-600">{lang !== 'ro' ? 'AWAY' : 'OASPETE'}</div>
                 </div>
               </div>
               {prediction.home_stats.h2h_home_wins !== undefined && (
                 <div className="mb-4 bg-gray-800/30 rounded-xl p-3">
-                  <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 text-center">📚 {lang === 'en' ? 'Recent head-to-head' : 'Meciuri directe recente'}</div>
+                  <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-2 text-center">📚 {lang !== 'ro' ? 'Recent head-to-head' : 'Meciuri directe recente'}</div>
                   <div className="flex justify-around">
                     {[
-                      { label: lang === 'en' ? 'Home wins' : 'Victorii gazdă', value: prediction.home_stats.h2h_home_wins, color: '#3b82f6' },
-                      { label: lang === 'en' ? 'Draws' : 'Egaluri', value: prediction.home_stats.h2h_draws, color: '#6b7280' },
-                      { label: lang === 'en' ? 'Away wins' : 'Victorii oaspete', value: prediction.home_stats.h2h_away_wins, color: '#f97316' },
+                      { label: lang !== 'ro' ? 'Home wins' : 'Victorii gazdă', value: prediction.home_stats.h2h_home_wins, color: '#3b82f6' },
+                      { label: lang !== 'ro' ? 'Draws' : 'Egaluri', value: prediction.home_stats.h2h_draws, color: '#6b7280' },
+                      { label: lang !== 'ro' ? 'Away wins' : 'Victorii oaspete', value: prediction.home_stats.h2h_away_wins, color: '#f97316' },
                     ].map(h => (
                       <div key={h.label} className="text-center">
                         <div className="text-2xl font-bold font-mono" style={{ color: h.color }}>{h.value}</div>
@@ -1084,7 +1084,7 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
               )}
               <StatBar label="xG For" homeVal={prediction.home_stats.xg_for ?? 1.5} awayVal={prediction.away_stats.xg_for ?? 1.2} />
               <StatBar label="xG Against" homeVal={prediction.home_stats.xg_against ?? 1.2} awayVal={prediction.away_stats.xg_against ?? 1.5} />
-              <StatBar label={lang === 'en' ? 'Goals/match' : 'Goluri/meci'} homeVal={prediction.home_stats.goals_avg ?? 1.5} awayVal={prediction.away_stats.goals_avg ?? 1.2} />
+              <StatBar label={lang !== 'ro' ? 'Goals/match' : 'Goluri/meci'} homeVal={prediction.home_stats.goals_avg ?? 1.5} awayVal={prediction.away_stats.goals_avg ?? 1.2} />
               <StatBar label="Elo Rating" homeVal={prediction.home_stats.elo_rating ?? 1500} awayVal={prediction.away_stats.elo_rating ?? 1500} format={(v) => Math.round(v).toString()} />
             </div>
           )}
@@ -1098,10 +1098,10 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
       {/* Tab: Clasament */}
       {activeTab === 'standings' && (
         <div className="card p-5 fade-in" style={{ overflow: 'hidden' }}>
-          <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4 text-center">{lang === 'en' ? 'Standings · Current season' : 'Clasament · Sezon curent'}</div>
+          <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4 text-center">{lang !== 'ro' ? 'Standings · Current season' : 'Clasament · Sezon curent'}</div>
           <StandingsTable standings={standings} highlightTeams={[prediction.home_team, prediction.away_team]} />
           {standings.length === 0 && (
-            <p className="text-center text-xs text-gray-600 mt-2">{lang === 'en' ? 'Standings available for major leagues' : 'Clasamentul e disponibil pentru ligile majore'}</p>
+            <p className="text-center text-xs text-gray-600 mt-2">{lang !== 'ro' ? 'Standings available for major leagues' : 'Clasamentul e disponibil pentru ligile majore'}</p>
           )}
         </div>
       )}
@@ -1110,17 +1110,17 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
       {activeTab === 'models' && !isProOrOwner && (
         <div className="card p-6 fade-in text-center" style={{ overflow: 'hidden' }}>
           <div className="text-3xl mb-3">🤖</div>
-          <div className="text-sm font-bold text-white mb-2">{lang === 'en' ? 'Model breakdown — Pro feature' : 'Detalii model — funcție Pro'}</div>
-          <div className="text-xs text-gray-500 mb-4 px-4">{lang === 'en' ? 'Full XGBoost + Elo + Poisson breakdown with weights and probabilities per model. Exclusive to Pro.' : 'Detalii complete XGBoost + Elo + Poisson cu ponderi și probabilități per model. Exclusiv Pro.'}</div>
+          <div className="text-sm font-bold text-white mb-2">{lang !== 'ro' ? 'Model breakdown — Pro feature' : 'Detalii model — funcție Pro'}</div>
+          <div className="text-xs text-gray-500 mb-4 px-4">{lang !== 'ro' ? 'Full XGBoost + Elo + Poisson breakdown with weights and probabilities per model. Exclusive to Pro.' : 'Detalii complete XGBoost + Elo + Poisson cu ponderi și probabilități per model. Exclusiv Pro.'}</div>
           <a href="/upgrade" className="inline-block px-6 py-2.5 rounded-full text-sm font-bold"
             style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', color: 'white' }}>
-            {lang === 'en' ? 'Upgrade to Pro — $20/mo' : 'Upgrade la Pro — 99 RON/lună'}
+            {lang !== 'ro' ? 'Upgrade to Pro — $20/mo' : 'Upgrade la Pro — 99 RON/lună'}
           </a>
         </div>
       )}
       {activeTab === 'models' && isProOrOwner && (
         <div className="card p-5 fade-in" style={{ overflow: 'hidden' }}>
-          <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4 text-center">{lang === 'en' ? 'Prediction model details' : 'Detalii modele predicție'}</div>
+          <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4 text-center">{lang !== 'ro' ? 'Prediction model details' : 'Detalii modele predicție'}</div>
           <div className="space-y-4">
             {[
               { key: 'elo',     label: '⚡ Elo Rating', color: '#a78bfa', weight: '15-20%' },
@@ -1133,7 +1133,7 @@ function PredictionDisplay({ prediction, fixture, standings, user }: {
                 <div key={key} className="bg-gray-800/30 rounded-xl p-4">
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-sm font-bold" style={{ color }}>{label}</span>
-                    <span className="text-[10px] text-gray-600 font-mono">{lang === 'en' ? 'Weight' : 'Pondere'}: {weight}</span>
+                    <span className="text-[10px] text-gray-600 font-mono">{lang !== 'ro' ? 'Weight' : 'Pondere'}: {weight}</span>
                   </div>
                   <div className="flex justify-around">
                     {[
@@ -1278,14 +1278,14 @@ function Home() {
                 style={{ width: 220, height: 220, objectFit: 'contain' }} />
             </div>
           </div>
-          <div className="text-blue-400 text-sm font-mono uppercase tracking-widest mb-3">{lang === 'en' ? 'Defining the Edge' : 'Definim avantajul'}</div>
+          <div className="text-blue-400 text-sm font-mono uppercase tracking-widest mb-3">{lang !== 'ro' ? 'Defining the Edge' : 'Definim avantajul'}</div>
           <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">{tr.hero_sub}</p>
         </div>
 
         {/* ── Ligi rapide ─────────────────────────────────────────── */}
         <div className="mb-6 fade-in">
           <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-3 text-center">
-            {lang === 'en' ? 'Quick select — top leagues' : 'Selectare rapidă — ligi principale'}
+            {lang !== 'ro' ? 'Quick select — top leagues' : 'Selectare rapidă — ligi principale'}
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
             {QUICK_LEAGUES.map(ql => {
@@ -1308,7 +1308,7 @@ function Home() {
                 >
                   <div style={{ fontSize: 22, marginBottom: 4 }}>{ql.flag}</div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: active ? '#4ade80' : '#d1d5db', whiteSpace: 'nowrap' }}>
-                    {lang === 'en' ? ql.nameEn : ql.nameRo}
+                    {lang !== 'ro' ? ql.nameEn : ql.nameRo}
                   </div>
                   {ql.acc && (
                     <div style={{ fontSize: 9, fontFamily: 'monospace', color: active ? '#86efac' : '#4b5563', marginTop: 2 }}>
