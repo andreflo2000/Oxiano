@@ -1,11 +1,14 @@
 services:
+  # ── API (serving pur — zero compute, zero scheduler) ──────────────────────
   - type: web
-    name: football-predictor-api
+    name: oxiano-api
     env: python
     region: frankfurt
-    plan: free
+    plan: starter          # $7/mo — fara cold start, dedicated CPU
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 60
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2 --timeout-keep-alive 75
+    healthCheckPath: /api/health
     envVars:
       - key: PYTHONIOENCODING
         value: utf-8
@@ -17,5 +20,76 @@ services:
         sync: false
       - key: ODDS_API_KEY
         sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ADMIN_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHANNEL_ID
+        sync: false
+      - key: GUMROAD_SELLER_ID
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+
+  # ── Worker (compute izolat — APScheduler + ingestion) ─────────────────────
+  - type: worker
+    name: oxiano-worker
+    env: python
+    region: frankfurt
+    plan: starter          # $7/mo — trebuie sa ramana activ 24/7
     rootDir: backend
-    healthCheckPath: /api/health
+    buildCommand: pip install -r requirements.txt
+    startCommand: python worker.py
+    envVars:
+      - key: PYTHONIOENCODING
+        value: utf-8
+      - key: PYTHONUTF8
+        value: "1"
+      - key: API_FOOTBALL_KEY
+        sync: false
+      - key: FOOTBALL_DATA_KEY
+        sync: false
+      - key: ODDS_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ADMIN_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHANNEL_ID
+        sync: false
+      - key: GUMROAD_SELLER_ID
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false

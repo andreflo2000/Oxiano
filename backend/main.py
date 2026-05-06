@@ -118,46 +118,8 @@ async def startup_event():
     except Exception:
         pass
 
-    # Porneste scheduler pentru pre-calculul zilnic
-    try:
-        from apscheduler.schedulers.background import BackgroundScheduler
-        from apscheduler.triggers.cron import CronTrigger
-
-        scheduler = BackgroundScheduler(timezone="Europe/Bucharest")
-
-        # Calculeaza picks pentru AZI la 07:00 si 13:00
-        scheduler.add_job(compute_and_store_picks, CronTrigger(hour=7,  minute=0))
-        scheduler.add_job(compute_and_store_picks, CronTrigger(hour=13, minute=0))
-        # Calculeaza picks pentru MAINE (+1) la 07:30
-        scheduler.add_job(
-            lambda: compute_and_store_picks((datetime.date.today() + datetime.timedelta(days=1)).isoformat()),
-            CronTrigger(hour=7, minute=30),
-        )
-        # Calculeaza picks pentru POIMAINE (+2) la 08:00
-        scheduler.add_job(
-            lambda: compute_and_store_picks((datetime.date.today() + datetime.timedelta(days=2)).isoformat()),
-            CronTrigger(hour=8, minute=0),
-        )
-        # Auto-marcare WIN/LOSS la 23:30 dupa terminarea majoritatii meciurilor
-        scheduler.add_job(auto_mark_results, CronTrigger(hour=23, minute=30))
-        # Refresh Elo externe zilnic la 06:00 (inainte de picks)
-        from predictor import refresh_clubelo
-        import cache as _cache_mod
-        scheduler.add_job(lambda: refresh_clubelo(_cache_mod), CronTrigger(hour=6, minute=0))
-        # Bet signals: pipeline la 09:00 (cote disponibile), update rezultate la 23:45
-        try:
-            from bet_signal import run_pipeline, update_results as _update_results
-            scheduler.add_job(run_pipeline, CronTrigger(hour=9, minute=0))
-            scheduler.add_job(_update_results, CronTrigger(hour=23, minute=45))
-            logger.info("Bet signal scheduler: pipeline 09:00, results 23:45")
-        except RuntimeError as _bse:
-            logger.warning("Bet signal dezactivat: %s", _bse)
-
-        scheduler.start()
-        logger.info("Scheduler pornit: pre-calcul picks la 07:00 si 13:00")
-
-    except Exception as e:
-        logger.warning("Scheduler init failed: %s", e)
+    # Scheduler-ul rulează în worker.py (serviciu Render separat).
+    # API-ul este pur serving — zero compute la startup.
 
 
 CACHE_TTL_DAILY    = 900    # 15 minute
