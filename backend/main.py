@@ -320,7 +320,8 @@ def auth_delete_account(user: dict = Depends(require_user)):
         client.table("users").delete().eq("id", uid).execute()
         return {"message": "Contul și datele tale au fost șterse complet."}
     except Exception as e:
-        raise HTTPException(500, f"Eroare la ștergere: {str(e)}")
+        logger.error("[delete_account] %s", e)
+        raise HTTPException(500, "Eroare la ștergere")
 
 
 # ─────────────────────────────────────────────
@@ -346,6 +347,9 @@ def api_leagues():
 # ─────────────────────────────────────────────
 # DAILY PICKS — endpoint principal
 # ─────────────────────────────────────────────
+
+FREE_PICKS_LIMIT = 3
+
 
 def _mask_vip_picks(picks: list, user: Optional[dict]) -> list:
     """Mascheaza datele vip_only pentru useri non-pro/vip."""
@@ -392,6 +396,13 @@ def _mask_vip_picks(picks: list, user: Optional[dict]) -> list:
             })
         else:
             result.append(p)
+
+    # Free users: max 3 picks vizibile
+    tier = (user or {}).get("tier", "free")
+    role = (user or {}).get("role", "user")
+    if tier not in ("pro", "vip", "analyst", "owner") and role not in ("owner", "admin"):
+        result = result[:FREE_PICKS_LIMIT]
+
     return result
 
 
@@ -589,7 +600,8 @@ def predict(req: MatchRequest, request: Request):
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.warning("[predict] %s", e)
+        raise HTTPException(status_code=500, detail="Eroare interna")
 
 
 @app.get("/predict/{home_team}/{away_team}")
@@ -598,7 +610,8 @@ def predict_simple(home_team: str, away_team: str):
     try:
         return predict_match(home_team=home_team, away_team=away_team)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.warning("[predict_simple] %s", e)
+        raise HTTPException(status_code=500, detail="Eroare interna")
 
 
 @app.get("/api/predict")
@@ -613,7 +626,8 @@ def predict_get(
     try:
         result = predict_match(home_team=home_team, away_team=away_team, league_id=league_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.warning("[predict_get] %s", e)
+        raise HTTPException(status_code=500, detail="Eroare interna")
 
     hw = round(result["home_win"] * 100, 1)
     dr = round(result["draw"] * 100, 1)
@@ -854,10 +868,10 @@ def debug_status():
 
 
 @app.get("/api/debug/odds")
-def debug_odds(secret: str = Query(default="")):
+@limiter.limit("5/minute")
+def debug_odds(request: Request, admin_secret: Optional[str] = Header(None, alias="X-Admin-Secret")):
     """Test direct Odds API — arata ce cote returneaza pentru La Liga azi."""
-    admin_secret = os.getenv("ADMIN_SECRET", "")
-    if not (secret and admin_secret and secret == admin_secret):
+    if not (admin_secret and ADMIN_SECRET and admin_secret == ADMIN_SECRET):
         raise HTTPException(403, "Unauthorized")
     import requests as req
     odds_key = os.getenv("ODDS_API_KEY", "")
@@ -885,9 +899,10 @@ def debug_odds(secret: str = Query(default="")):
 # ─────────────────────────────────────────────
 
 @app.post("/api/admin/bet-signals/run")
-def admin_bet_signals_run(secret: str = Query(default="")):
+@limiter.limit("5/minute")
+def admin_bet_signals_run(request: Request, admin_secret: Optional[str] = Header(None, alias="X-Admin-Secret")):
     """Triggereaza manual pipeline-ul de semnale BET (fetch + analiza + insert Supabase)."""
-    if not (secret and ADMIN_SECRET and secret == ADMIN_SECRET):
+    if not (admin_secret and ADMIN_SECRET and admin_secret == ADMIN_SECRET):
         raise HTTPException(403, "Unauthorized")
     try:
         from bet_signal import run_pipeline
@@ -895,15 +910,18 @@ def admin_bet_signals_run(secret: str = Query(default="")):
         threading.Thread(target=run_pipeline, daemon=True).start()
         return {"status": "started", "message": "Pipeline bet_signal pornit in background"}
     except RuntimeError as e:
-        raise HTTPException(503, str(e))
+        logger.warning("[bet-signals/run] %s", e)
+        raise HTTPException(503, "Serviciu temporar indisponibil")
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.error("[bet-signals/run] %s", e)
+        raise HTTPException(500, "Eroare interna")
 
 
 @app.post("/api/admin/bet-signals/update-results")
-def admin_bet_signals_results(secret: str = Query(default="")):
+@limiter.limit("5/minute")
+def admin_bet_signals_results(request: Request, admin_secret: Optional[str] = Header(None, alias="X-Admin-Secret")):
     """Triggereaza manual update-ul rezultatelor pendente (W/L/P)."""
-    if not (secret and ADMIN_SECRET and secret == ADMIN_SECRET):
+    if not (admin_secret and ADMIN_SECRET and admin_secret == ADMIN_SECRET):
         raise HTTPException(403, "Unauthorized")
     try:
         from bet_signal import update_results
@@ -911,15 +929,18 @@ def admin_bet_signals_results(secret: str = Query(default="")):
         threading.Thread(target=update_results, daemon=True).start()
         return {"status": "started", "message": "Update rezultate pornit in background"}
     except RuntimeError as e:
-        raise HTTPException(503, str(e))
+        logger.warning("[bet-signals/results] %s", e)
+        raise HTTPException(503, "Serviciu temporar indisponibil")
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.error("[bet-signals/results] %s", e)
+        raise HTTPException(500, "Eroare interna")
 
 
 @app.get("/api/admin/bet-signals")
-def admin_bet_signals_list(secret: str = Query(default=""), limit: int = 50):
+@limiter.limit("10/minute")
+def admin_bet_signals_list(request: Request, limit: int = 50, admin_secret: Optional[str] = Header(None, alias="X-Admin-Secret")):
     """Returneaza ultimele semnale BET din Supabase."""
-    if not (secret and ADMIN_SECRET and secret == ADMIN_SECRET):
+    if not (admin_secret and ADMIN_SECRET and admin_secret == ADMIN_SECRET):
         raise HTTPException(403, "Unauthorized")
     client = get_client()
     if not client:
@@ -943,7 +964,8 @@ def admin_bet_signals_list(secret: str = Query(default=""), limit: int = 50):
             "signals": rows,
         }
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.error("[bet-signals] %s", e)
+        raise HTTPException(500, "Eroare interna")
 
 
 @app.get("/api/bet-signals/stats")
@@ -973,7 +995,8 @@ def bet_signals_stats():
             "recent": recent,
         }
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.error("[bet-signals/stats] %s", e)
+        raise HTTPException(500, "Eroare interna")
 
 
 # ─────────────────────────────────────────────
@@ -1309,7 +1332,8 @@ def admin_set_pick_result(
         }, on_conflict="pick_date,home,away").execute()
         return {"ok": True, "saved": f"{req.home} vs {req.away} ({req.pick_date}) = {req.result}"}
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.error("[admin/picks/result] %s", e)
+        raise HTTPException(500, "Eroare interna")
 
 
 @app.post("/api/admin/picks/auto-results")
@@ -1333,17 +1357,17 @@ def admin_rerun_picks(
         result = compute_and_store_picks(date)
         return {"ok": True, "picks": result.get("total_picks", 0), "date": result.get("date")}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        logger.error("[admin/rerun-picks] %s", e)
+        raise HTTPException(status_code=500, detail="Eroare interna")
 
 
 @app.api_route("/api/admin/cache/clear-odds", methods=["GET", "POST"])
-def admin_clear_odds_cache(secret: str = Query(default=""), user: dict = Depends(get_current_user)):
+def admin_clear_odds_cache(x_admin_secret: Optional[str] = Header(None, alias="X-Admin-Secret"), user: dict = Depends(get_current_user)):
     """Sterge cache-ul de odds si picks, recompute picks de azi cu cotele noi."""
-    admin_secret = os.getenv("ADMIN_SECRET", "")
-    if not (secret and admin_secret and secret == admin_secret):
-        if not (user and user.get("role") in ("owner", "admin")):
-            raise HTTPException(403, "Unauthorized")
+    is_admin_key = x_admin_secret and ADMIN_SECRET and x_admin_secret == ADMIN_SECRET
+    is_jwt_admin = user and user.get("role") in ("owner", "admin")
+    if not is_admin_key and not is_jwt_admin:
+        raise HTTPException(403, "Unauthorized")
     import datetime as _dt
     today = _dt.date.today().isoformat()
     import cache as redis_cache
@@ -1362,11 +1386,11 @@ def admin_clear_odds_cache(secret: str = Query(default=""), user: dict = Depends
 
 
 @app.get("/api/admin/send-telegram")
-def admin_send_telegram(secret: str = Query(default=""), user: dict = Depends(get_current_user)):
+@limiter.limit("5/minute")
+def admin_send_telegram(request: Request, x_admin_secret: Optional[str] = Header(None, alias="X-Admin-Secret"), user: dict = Depends(get_current_user)):
     """Trimite manual combo Telegram pentru picks de azi. Protejat cu ADMIN_SECRET sau owner."""
-    admin_secret = os.getenv("ADMIN_SECRET", "")
-    is_authorized = (secret and admin_secret and secret == admin_secret) or \
-                    (user and user.get("tier") in ("owner", "pro", "vip"))
+    is_authorized = (x_admin_secret and ADMIN_SECRET and x_admin_secret == ADMIN_SECRET) or \
+                    (user and user.get("role") in ("owner", "admin"))
     if not is_authorized:
         raise HTTPException(403, "Unauthorized")
 
@@ -1414,7 +1438,9 @@ def admin_backfill_results(
 
 
 @app.get("/api/admin/picks/results")
+@limiter.limit("10/minute")
 def admin_get_pick_results(
+    request: Request,
     date: Optional[str] = None,
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
 ):
@@ -1431,7 +1457,8 @@ def admin_get_pick_results(
         rows = q.execute()
         return {"results": rows.data or []}
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.error("[admin/picks/results] %s", e)
+        raise HTTPException(500, "Eroare interna")
 
 
 # ─────────────────────────────────────────────
@@ -1685,7 +1712,8 @@ def admin_refresh_picks(
         result = compute_and_store_picks(date)
         return {"ok": True, "picks": result.get("total_picks", 0), "date": result.get("date")}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("[admin/refresh-picks] %s", e)
+        raise HTTPException(status_code=500, detail="Eroare interna")
 
 
 
