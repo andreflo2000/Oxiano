@@ -1290,17 +1290,23 @@ def admin_list_users(
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
     current_user: Optional[dict] = Depends(get_current_user),
 ):
-    is_jwt_admin = current_user and current_user.get("role") in ("owner", "admin")
-    if not is_jwt_admin and (not ADMIN_SECRET or x_admin_key != ADMIN_SECRET):
-        raise HTTPException(403, "Acces interzis")
-    client = get_client()
-    if not client:
-        raise HTTPException(503, "DB indisponibil")
-    q = client.table("users").select("id,email,tier,tier_expires,created_at")
-    if search:
-        q = q.ilike("email", f"%{search}%")
-    rows = q.order("created_at", desc=True).limit(50).execute()
-    return rows.data
+    try:
+        is_jwt_admin = current_user and current_user.get("role") in ("owner", "admin")
+        if not is_jwt_admin and (not ADMIN_SECRET or x_admin_key != ADMIN_SECRET):
+            raise HTTPException(403, "Acces interzis")
+        client = get_client()
+        if not client:
+            raise HTTPException(503, "DB indisponibil")
+        q = client.table("users").select("id,email,tier,tier_expires,created_at")
+        if search:
+            q = q.ilike("email", f"%{search}%")
+        rows = q.order("created_at", desc=True).limit(50).execute()
+        return rows.data
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("admin_list_users error: %s", e, exc_info=True)
+        raise HTTPException(500, f"admin error: {str(e)}")
 
 
 # ADMIN — marcare rezultate WIN/LOSS
