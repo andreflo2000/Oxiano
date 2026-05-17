@@ -9,6 +9,11 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 _client = None
+_init_error: str = ""
+
+
+def get_init_error() -> str:
+    return _init_error
 
 
 def get_client():
@@ -20,15 +25,19 @@ def get_client():
     url = os.getenv("SUPABASE_URL", "")
     key = os.getenv("SUPABASE_KEY", "") or os.getenv("SUPABASE_SERVICE_KEY", "")
 
+    global _init_error
     if not url or not key:
+        _init_error = "SUPABASE_URL/KEY missing"
         logger.warning("SUPABASE_URL / SUPABASE_SERVICE_KEY lipsesc - DB logging dezactivat")
         return None
 
     try:
         from supabase import create_client
         _client = create_client(url, key)
+        _init_error = ""
         logger.info("Supabase conectat: %s", url)
     except Exception as e:
+        _init_error = str(e)
         logger.error("Supabase init failed: %s", e)
         _client = None
 

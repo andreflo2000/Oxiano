@@ -155,11 +155,10 @@ def api_health():
         status = "error"
 
     # Supabase — query simplu
-    env_url = bool(os.getenv("SUPABASE_URL"))
-    env_key = bool(os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_SERVICE_KEY"))
     client = get_client()
     if client is None:
-        supabase_status = f"client=None (SUPABASE_URL={'ok' if env_url else 'MISSING'}, KEY={'ok' if env_key else 'MISSING'})"
+        from db import get_init_error
+        supabase_status = f"client=None: {get_init_error() or 'unknown'}"
         status = "error"
     else:
         try:
