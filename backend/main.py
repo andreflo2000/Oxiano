@@ -1297,7 +1297,7 @@ def admin_list_users(
         client = get_client()
         if not client:
             raise HTTPException(503, "DB indisponibil")
-        q = client.table("users").select("id,email,tier,tier_expires,created_at")
+        q = client.table("users").select("*")
         if search:
             q = q.ilike("email", f"%{search}%")
         rows = q.order("created_at", desc=True).limit(50).execute()
