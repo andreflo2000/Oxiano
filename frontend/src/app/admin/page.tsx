@@ -35,6 +35,8 @@ export default function AdminPage() {
 
   const [rerunLoading, setRerunLoading] = useState(false)
   const [rerunMsg, setRerunMsg]         = useState('')
+  const [allUsers, setAllUsers]         = useState<UserRow[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   useEffect(() => {
     if (getToken() && isAdmin()) {
@@ -42,6 +44,13 @@ export default function AdminPage() {
       doSearch('')
     }
   }, [])
+
+  // search live cu debounce 300ms
+  useEffect(() => {
+    if (!authed) return
+    const t = setTimeout(() => doSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search, authed])
 
   async function doLogin() {
     setLoginLoading(true); setLoginErr('')
@@ -68,10 +77,16 @@ export default function AdminPage() {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (res.status === 403) { setMsg('Acces refuzat'); setLoading(false); return }
-      setUsers(await res.json())
+      const data = await res.json()
+      setUsers(data)
+      if (!q) setAllUsers(data)
     } catch { setMsg('Eroare conexiune') }
     setLoading(false)
   }
+
+  const suggestions = selEmail
+    ? allUsers.filter(u => u.email.toLowerCase().includes(selEmail.toLowerCase()) && u.email !== selEmail)
+    : []
 
   async function doRerunPicks() {
     setRerunLoading(true); setRerunMsg('')
@@ -228,14 +243,43 @@ export default function AdminPage() {
         <div style={s.card}>
           <span style={s.label}>Setează tier</span>
 
-          {selEmail ? (
-            <div style={{ color: '#4ade80', fontSize: 13, marginBottom: 12 }}>👤 {selEmail}
-              <span onClick={() => setSelEmail('')} style={{ marginLeft: 8, color: '#4b5563', cursor: 'pointer', fontSize: 11 }}>✕ schimbă</span>
-            </div>
-          ) : (
-            <input style={s.input} placeholder="Email utilizator"
-              value={selEmail} onChange={e => setSelEmail(e.target.value)} />
-          )}
+          <div style={{ position: 'relative', marginBottom: 12 }}>
+            <input
+              style={{ ...s.input, marginBottom: 0, borderColor: selEmail ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.1)' }}
+              placeholder="Scrie email sau parte din el..."
+              value={selEmail}
+              onChange={e => { setSelEmail(e.target.value); setShowSuggestions(true) }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                background: '#0d1f14', border: '1px solid rgba(74,222,128,0.3)',
+                borderRadius: 8, maxHeight: 200, overflowY: 'auto',
+              }}>
+                {suggestions.map(u => (
+                  <div key={u.id}
+                    onMouseDown={() => { setSelEmail(u.email); setShowSuggestions(false) }}
+                    style={{
+                      padding: '10px 14px', cursor: 'pointer', fontSize: 13,
+                      display: 'flex', justifyContent: 'space-between',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(74,222,128,0.08)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <span style={{ color: '#e5e7eb' }}>{u.email}</span>
+                    <span style={{ color: TIER_COLOR[u.tier] || '#fff', fontSize: 11, fontWeight: 700 }}>{u.tier.toUpperCase()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selEmail && (
+              <span onClick={() => setSelEmail('')}
+                style={{ position: 'absolute', right: 12, top: 12, color: '#4b5563', cursor: 'pointer', fontSize: 16 }}>✕</span>
+            )}
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
             {['free', 'analyst', 'pro', 'vip'].map(t => (
