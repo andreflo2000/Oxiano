@@ -9,7 +9,7 @@ interface UserRow {
   email: string
   tier: string
   tier_expires: string | null
-  created_at: string
+  role: string
 }
 
 const TIER_COLOR: Record<string, string> = {
@@ -206,8 +206,8 @@ export default function AdminPage() {
                 <div>
                   <div style={{ color: '#e5e7eb', fontSize: 14 }}>{u.email}</div>
                   <div style={{ color: '#4b5563', fontSize: 11, marginTop: 2 }}>
-                    înregistrat: {u.created_at.split('T')[0]}
-                    {u.tier_expires && ` · expiră: ${u.tier_expires.split('T')[0]}`}
+                    {u.role && u.role !== 'user' && `rol: ${u.role} · `}
+                    {u.tier_expires && `expiră: ${u.tier_expires.split('T')[0]}`}
                   </div>
                 </div>
                 <span style={{
