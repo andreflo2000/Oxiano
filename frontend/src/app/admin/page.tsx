@@ -49,14 +49,14 @@ export default function AdminPage() {
 
   function handleSearchChange(val: string) {
     setSearch(val)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => loadUsers(val), 300)
+    const filtered = val ? allUsers.filter(u => u.email.toLowerCase().includes(val.toLowerCase())) : allUsers
+    setUsers(filtered)
   }
 
   async function loadUsers(q: string) {
     setLoading(true); setSearchErr('')
     try {
-      const res = await fetch(`${API}/api/admin/users?search=${encodeURIComponent(q)}`, {
+      const res = await fetch(`${API}/api/admin/users`, {
         headers: { Authorization: `Bearer ${getToken()}` }
       })
       if (res.status === 403) { setSearchErr('Acces refuzat'); setLoading(false); return }
@@ -65,9 +65,10 @@ export default function AdminPage() {
         setSearchErr(`HTTP ${res.status}: ${text.slice(0, 120)}`)
         setLoading(false); return
       }
-      const data = await res.json()
-      setUsers(data)
-      if (!q) setAllUsers(data)
+      const data: UserRow[] = await res.json()
+      setAllUsers(data)
+      const filtered = q ? data.filter(u => u.email.toLowerCase().includes(q.toLowerCase())) : data
+      setUsers(filtered)
     } catch (e: any) { setSearchErr(`Eroare: ${e?.message || String(e)}`) }
     setLoading(false)
   }
