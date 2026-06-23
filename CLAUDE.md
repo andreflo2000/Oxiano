@@ -105,6 +105,7 @@ GUMROAD_SELLER_ID       # validare webhook Gumroad (prin body, nu query param)
 Confidence ≥65%:  66.7% (10/15 picks) — publicat corect pe "despre" ca "62-67%"
 Confidence ≥60%:  60.0% (15/25 picks)
 Toate picks:      47.8% (54/113 picks) — include confidence redus, de-emphasized in UI
+Ultimul pick:     11 mai 2026 (gol de vara — ligi europene terminate)
 ```
 Pagina "despre": cifra "86.1% La Liga" eliminata complet, inlocuita cu "62-67%"
 Track-record UI: ≥65% conf proeminent (verde, border, badge "Recomandat"), overall gri/opacity 0.6
@@ -159,6 +160,17 @@ Track-record UI: ≥65% conf proeminent (verde, border, badge "Recomandat"), ove
 7. **Adauga DE, ES, PT** — piete de 10x mai mari ca Romania
    - Sistem de i18n existent: `lib/LangContext`, `app/i18n.ts`
    - Adauga german, spaniol, portughez la toate textele
+
+## Gol de vară (mai — ~16 august 2026)
+Toate cele 9 ligi din free tier football-data.org și-au terminat sezonul în mai.
+Sistemul e sănătos — pur și simplu nu are ce procesa. Picks revin automat când repornesc ligile.
+
+**Fix aplicat 2026-06-23**: `backend/worker.py` — `_keepalive_db()` la 12:00 zilnic + la startup.
+Previne pauza Supabase free tier (7 zile inactivitate). Commit: `bafdd08`.
+
+**BSA (Brasileirao)**: disponibil în free tier dar dezactivat intenționat — modelul nu are date de antrenare pentru echipe sud-americane. Nu activa fără retrain.
+
+**Sezoanele europene reîncep**: PL ~16 aug, Bundesliga ~22 aug 2026.
 
 ## Comenzi utile
 ```bash
