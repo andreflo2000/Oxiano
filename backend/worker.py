@@ -104,6 +104,18 @@ def _update_bet_results():
         logger.error("Bet signal update results esuat: %s", e)
 
 
+def _keepalive_db():
+    """Ping Supabase zilnic ca sa evitam pauza pe free tier (7 zile inactivitate)."""
+    from db import get_client
+    try:
+        client = get_client()
+        if client:
+            client.table("daily_picks").select("id").limit(1).execute()
+            logger.info("DB keepalive OK.")
+    except Exception as e:
+        logger.warning("DB keepalive esuat: %s", e)
+
+
 if __name__ == "__main__":
     logger.info("=== OXIANO WORKER PORNIT ===")
 
@@ -114,6 +126,7 @@ if __name__ == "__main__":
     _compute_today()
     _compute_tomorrow()
     _compute_day_after()
+    _keepalive_db()
 
     scheduler = BlockingScheduler(timezone="Europe/Bucharest")
 
@@ -131,6 +144,8 @@ if __name__ == "__main__":
     # Bet signals: pipeline 09:00, rezultate 23:45
     scheduler.add_job(_run_bet_pipeline,   CronTrigger(hour=9,  minute=0),  id="bet_pipeline")
     scheduler.add_job(_update_bet_results, CronTrigger(hour=23, minute=45), id="bet_results")
+    # Keepalive Supabase: ping zilnic la 12:00 — evita pauza free tier (7 zile inactivitate)
+    scheduler.add_job(_keepalive_db, CronTrigger(hour=12, minute=0), id="db_keepalive")
 
     logger.info("Scheduler pornit. Jobs active: %s", [j.id for j in scheduler.get_jobs()])
     scheduler.start()
